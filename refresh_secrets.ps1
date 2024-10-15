@@ -1,0 +1,1 @@
+$secrets = @{}; gcloud secrets list --format "value(name)" | % { $secrets[$_] = (gcloud secrets versions access 'latest' --secret $_) }; $secrets.GetEnumerator() | % { Set-Item -Path "Env:$($_.Name)" -Value $($_.Value) };
