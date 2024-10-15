@@ -1,8 +1,11 @@
+using Google.Cloud.BigQuery.V2;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId));
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
-namespace sisyphish.Tools;
+namespace sisyphish.Tools.Discord;
 
 public enum DiscordInteractionType
 {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Filters;
-using sisyphish.Tools;
+using sisyphish.Tools.Discord;
 
 namespace sisyphish.Controllers;
 
