@@ -19,7 +19,7 @@ public class TestController : ControllerBase
     public async Task<string> Get()
     {
         var args = new [] { new BigQueryParameter("id", BigQueryDbType.String, "31187caec46b46ee99b04fc751de5e02") };
-        var results = await _bigQueryClient.ExecuteQueryAsync("select name from siyphish.test where id = @id", args);
+        var results = await _bigQueryClient.ExecuteQueryAsync("select name from sisyphish.test where id = @id", args);
         var name = results.FirstOrDefault()?["name"];
 
         return $"Looking good, {name} !";
