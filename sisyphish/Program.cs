@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId));
+//builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId)); //TODO: setup config file locally
 
 var app = builder.Build();
 
