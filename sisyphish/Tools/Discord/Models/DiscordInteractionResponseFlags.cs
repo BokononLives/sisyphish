@@ -1,4 +1,4 @@
-namespace sisyphish.Tools.Discord;
+namespace sisyphish.Tools.Discord.Models;
 
 public enum DiscordInteractionResponseFlags
 {
