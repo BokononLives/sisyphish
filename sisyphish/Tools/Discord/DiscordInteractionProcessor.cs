@@ -6,29 +6,25 @@ public class DiscordInteractionProcessor : IDiscordInteractionProcessor
 {
     public async Task<IDiscordInteractionResponse> ProcessDiscordInteraction(DiscordInteraction interaction)
     {
-        switch (interaction?.Type)
+        return (interaction?.Type) switch
         {
-            case null:
-                return new DiscordInteractionErrorResponse { Error = "Interaction type is required" };
-            case DiscordInteractionType.Ping:
-                return Pong();
-            case DiscordInteractionType.ApplicationCommand:
-                return ProcessApplicationCommand(interaction);
-            default:
-                return new DiscordInteractionErrorResponse { Error = "Invalid interaction type" };
-        }
+            DiscordInteractionType.Ping => Pong(),
+            DiscordInteractionType.ApplicationCommand => ProcessApplicationCommand(interaction),
+            null => new DiscordInteractionErrorResponse { Error = "Interaction type is required" },
+            _ => new DiscordInteractionErrorResponse { Error = "Invalid interaction type" },
+        };
     }
 
-    private DiscordInteractionResponse Pong()
+    private static DiscordInteractionResponse Pong()
     {
         return new DiscordInteractionResponse { ContentType = DiscordInteractionResponseContentType.Pong };
     }
 
     private IDiscordInteractionResponse ProcessApplicationCommand(DiscordInteraction interaction)
     {
-        return (interaction.Data?.Name?.ToLower()) switch
+        return (interaction.Data?.Name) switch
         {
-            "fish" => new DiscordInteractionResponse
+            DiscordCommandName.Fish => new DiscordInteractionResponse
             {
                 ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
                 Data = new DiscordInteractionResponseData

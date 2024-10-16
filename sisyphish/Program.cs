@@ -7,7 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IDiscordInteractionProcessor, DiscordInteractionProcessor>();
-builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId)); //TODO: setup config file locally
+builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId));
 
 var app = builder.Build();
 

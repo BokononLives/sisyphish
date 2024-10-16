@@ -1,6 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace sisyphish.Tools.Discord.Models;
 
 public class DiscordInteractionData
 {
-    public string? Name { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))] public DiscordCommandName? Name { get; set; }
 }
