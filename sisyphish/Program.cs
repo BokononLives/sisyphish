@@ -1,10 +1,12 @@
 using Google.Cloud.BigQuery.V2;
+using sisyphish.Tools.Discord;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IDiscordInteractionProcessor, DiscordInteractionProcessor>();
 //builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId)); //TODO: setup config file locally
 
 var app = builder.Build();

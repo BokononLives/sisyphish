@@ -1,6 +1,6 @@
-namespace sisyphish.Tools.Discord;
+namespace sisyphish.Tools.Discord.Models;
 
-public enum DiscordInteractionResponseType
+public enum DiscordInteractionResponseContentType
 {
     Pong = 1,
     ChannelMessageWithSource = 4,
