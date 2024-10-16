@@ -7,7 +7,6 @@ namespace sisyphish.Controllers;
 [Route("test")]
 public class TestController : ControllerBase
 {
-
     private readonly BigQueryClient _bigQueryClient;
 
     public TestController(BigQueryClient bigQueryClient)
