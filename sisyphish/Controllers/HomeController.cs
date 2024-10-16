@@ -1,5 +1,8 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Google.Cloud.BigQuery.V2;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using sisyphish.Filters;
 using sisyphish.Tools.Discord;
 
@@ -9,12 +12,12 @@ namespace sisyphish.Controllers;
 [Route("")]
 public class HomeController : ControllerBase
 {
-    private readonly BigQueryClient _bigQueryClient;
+    // private readonly BigQueryClient _bigQueryClient;
 
-    public HomeController(BigQueryClient bigQueryClient)
-    {
-        _bigQueryClient = bigQueryClient;
-    }
+    // public HomeController(BigQueryClient bigQueryClient)
+    // {
+    //     _bigQueryClient = bigQueryClient;
+    // }
 
     [HttpGet(Name = "")]
     public string Get()
@@ -49,10 +52,10 @@ public class HomeController : ControllerBase
         switch (interaction.Data?.Name?.ToLower())
         {
             case "fish":
-                var response = new DiscordInteractionResponse
+                var response = new //TODO: use DiscordInteractionResponse model, format properly, ignore empty array for flags
                 {
                     Type = DiscordInteractionResponseType.ChannelMessageWithSource,
-                    Data = new DiscordInteractionResponseData
+                    Data = new
                     {
                         Content = "Nothing's biting yet..."
                     }
