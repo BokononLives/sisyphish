@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
+using sisyphish.Tools.Discord.Sisyphish.Models;
 
-namespace sisyphish.Tools.Discord.Models;
+namespace sisyphish.Tools.Discord.Core.Models;
 
 public class DiscordInteractionData
 {

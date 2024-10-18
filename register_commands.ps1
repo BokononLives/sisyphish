@@ -8,6 +8,10 @@ $body = '[
     {
         "name": "fish",
         "description": "fissshhh"
+    },
+    {
+        "name": "reset",
+        "description": "WIPE OUT ALL YOUR SISYPHISH DATA IRREVERSIBLY"
     }
 ]'
 
