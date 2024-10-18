@@ -1,4 +1,4 @@
-namespace sisyphish.Tools.Discord.Models;
+namespace sisyphish.Tools.Discord.Core.Models;
 
 public enum DiscordInteractionResponseContentType
 {

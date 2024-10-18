@@ -1,4 +1,4 @@
-using sisyphish.Tools.Discord.Models;
+using sisyphish.Tools.Discord.Core.Models;
 
 namespace sisyphish.Tools.Discord;
 

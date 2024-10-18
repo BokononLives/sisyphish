@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace sisyphish.Tools.Discord.Models;
+namespace sisyphish.Tools.Discord.Core.Models;
 
 public class DiscordInteractionErrorResponse : IDiscordInteractionResponse
 {
