@@ -24,14 +24,3 @@ public class TestController : ControllerBase
         return $"Looking good, {name} !";
     }
 }
-
-[ApiController]
-[Route("secret")]
-public class SecretController : ControllerBase
-{
-    [HttpGet(Name = "secret")]
-    public async Task<string> Get()
-    {
-        return await Task.FromResult("You're in!");
-    }
-}

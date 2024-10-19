@@ -5,6 +5,7 @@ public class Config
     public static string DiscordPublicKey => GetValue("DISCORD_PUBLIC_KEY");
     public static string DiscordToken => GetValue("DISCORD_TOKEN");
     public static string GoogleProjectId => GetValue("GOOGLE_PROJECT_ID");
+    public static string GoogleServiceAccount => GetValue("GOOGLE_SERVICE_ACCOUNT");
     public static bool IsDevelopment => GetValue("ASPNETCORE_ENVIRONMENT").Equals("DEVELOPMENT", StringComparison.InvariantCultureIgnoreCase);
     public static string Port => "8080";
     public static string Url => $"{BaseUrl}:{Port}";
