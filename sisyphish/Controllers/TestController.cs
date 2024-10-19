@@ -25,6 +25,7 @@ public class TestController : ControllerBase
         var tasksClient = await new CloudTasksClientBuilder().BuildAsync();
         var createTaskRequest = new CreateTaskRequest
         {
+            ParentAsQueueName = QueueName.FromProjectLocationQueue(Config.GoogleProjectId, Config.GoogleLocation, Config.GoogleProjectId),
             Task = new Google.Cloud.Tasks.V2.Task
             {
                 HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
@@ -38,9 +39,9 @@ public class TestController : ControllerBase
                 }
             }
         };
-        
-        await tasksClient.CreateTaskAsync(createTaskRequest);
 
-        return $"Looking good, {name} !";
+        var createdTask = await tasksClient.CreateTaskAsync(createTaskRequest);
+
+        return $"Looking good, {createdTask.Name} !";
     }
 }

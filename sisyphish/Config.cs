@@ -4,6 +4,7 @@ public class Config
     public static string DiscordApplicationId => GetValue("DISCORD_APPLICATION_ID");
     public static string DiscordPublicKey => GetValue("DISCORD_PUBLIC_KEY");
     public static string DiscordToken => GetValue("DISCORD_TOKEN");
+    public static string GoogleLocation => "us-central1";
     public static string GoogleProjectId => GetValue("GOOGLE_PROJECT_ID");
     public static string GoogleServiceAccount => GetValue("GOOGLE_SERVICE_ACCOUNT");
     public static bool IsDevelopment => GetValue("ASPNETCORE_ENVIRONMENT").Equals("DEVELOPMENT", StringComparison.InvariantCultureIgnoreCase);
