@@ -8,6 +8,7 @@ public class Config
     public static string GoogleServiceAccount => GetValue("GOOGLE_SERVICE_ACCOUNT");
     public static bool IsDevelopment => GetValue("ASPNETCORE_ENVIRONMENT").Equals("DEVELOPMENT", StringComparison.InvariantCultureIgnoreCase);
     public static string Port => "8080";
+    public static string PublicBaseUrl => "https://helloworld-33197368037.us-central1.run.app";
     public static string Url => $"{BaseUrl}:{Port}";
 
     private static string GetValue(string key)
