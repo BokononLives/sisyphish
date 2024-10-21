@@ -40,13 +40,9 @@ public class SisyphishController : ControllerBase
     {
         await DeleteFisher(interaction);
 
-        var response = new DiscordInteractionResponse
+        var response = new DiscordInteractionEdit
         {
-            ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
-            Data = new DiscordInteractionResponseData
-            {
-                Content = $"Bye, <@{interaction.UserId}>!"
-            }
+            Content = $"Bye, <@{interaction.UserId}>!"
         };
 
         await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
