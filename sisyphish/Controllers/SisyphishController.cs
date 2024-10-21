@@ -1,3 +1,4 @@
+using System.Text;
 using Flurl.Http;
 using Google.Cloud.BigQuery.V2;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +24,82 @@ public class SisyphishController : ControllerBase
     {
         var fisher = await GetOrCreateFisher(interaction);
 
+        var content = new StringBuilder();
+        content.AppendLine($"You cast your line into the Sea of Possibilities...");
+
+        var biteRoll = Random.Shared.Next(1, 10);
+
+        if (biteRoll <= 6)
+        {
+            content.AppendLine("...But nothing's biting!");
+        }
+        else
+        {
+            var fishSize = 0;
+            int fishRoll;
+
+            do
+            {
+                fishRoll = Random.Shared.Next(1, 10);
+                fishSize += fishRoll;
+            } while (fishRoll == 10);
+
+            if (fishRoll <= 2)
+            {
+                content.AppendLine("You feel the smallest nibble...");
+            }
+            else if (fishRoll <= 5)
+            {
+                content.AppendLine("Something's biting!");
+            }
+            else if (fishRoll <= 20)
+            {
+                content.AppendLine("Something's biting, and it's a pretty big one!");
+            }
+            else if (fishRoll <= 50)
+            {
+                content.AppendLine("Something's biting, and it's a HUGE one!");
+            }
+            else
+            {
+                content.AppendLine("It's a massive trophy fish! Don't let this one get away!");
+            }
+
+            var reelStrength = 0;
+            int reelRoll;
+
+            do
+            {
+                reelRoll = Random.Shared.Next(1, 10);
+                reelStrength += reelRoll;
+            } while (reelRoll == 10);
+
+            if (reelStrength < fishSize)
+            {
+                content.AppendLine("It got away...");
+            }
+            else
+            {
+                content.AppendLine($"You reel it in! Congratulations! You got a fish. It's {fishSize} cm!");
+
+                await AddFish(interaction, fishSize);
+                
+                if (fishSize > fisher?.BiggestFish)
+                {
+                    content.AppendLine($"A new personal best!");
+                }
+                else
+                {
+                    content.AppendLine($"(Biggest fish caught so far: {fisher?.BiggestFish} cm)");
+                }
+
+                content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher?.FishCaught}");
+            }
+        }
+
         var response = new DiscordInteractionEdit
         {
-            Content = $"Nothing's biting yet, <@{interaction.UserId}>... [Fish caught: {fisher?.FishCaught ?? 0} / Biggest fish: {fisher?.BiggestFish ?? 0} cm]"
+            Content = content.ToString()
         };
 
         await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
@@ -110,6 +184,24 @@ public class SisyphishController : ControllerBase
                 (@id, @created_at, @discord_user_id, @fish_caught, @biggest_fish)", args);
         
         return fisher;
+    }
+
+    private async Task AddFish(DiscordInteraction interaction, int fishSize)
+    {
+        var args = new []
+        {
+            new BigQueryParameter("discord_user_id", BigQueryDbType.String, interaction.UserId),
+            new BigQueryParameter("fish_size", BigQueryDbType.Int64, fishSize)
+        };
+
+        await _bigQueryClient.ExecuteQueryAsync(@"
+            update sisyphish.fishers
+            set fish_caught = fish_caught + 1,
+            biggest_fish = GREATEST(biggest_fish, @fish_size)
+            where discord_user_id = @discord_user_id
+                (id, created_at, discord_user_id, fish_caught, biggest_fish)
+            values
+                (@id, @created_at, @discord_user_id, @fish_caught, @biggest_fish)", args);
     }
 
     private async Task DeleteFisher(DiscordInteraction interaction)
