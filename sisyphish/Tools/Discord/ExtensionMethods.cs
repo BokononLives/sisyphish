@@ -10,6 +10,7 @@ public static class ExtensionMethods
         switch (response.ResponseType)
         {
             case DiscordInteractionResponseType.DiscordInteractionResponse:
+            case DiscordInteractionResponseType.DeferredDiscordInteractionResponse:
                 return controller.Ok(response);
             case DiscordInteractionResponseType.DiscordInteractionErrorResponse:
                 return controller.BadRequest(response);

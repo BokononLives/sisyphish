@@ -4,10 +4,9 @@ using sisyphish.Filters;
 namespace sisyphish.Controllers;
 
 [ApiController]
-[Route("secret")]
 public class SecretController : ControllerBase
 {
-    [HttpGet(Name = "secret")]
+    [HttpGet("secret")]
     [GoogleCloud]
     public async Task<string> Get()
     {

@@ -1,63 +1,46 @@
+using Flurl.Http;
 using Google.Cloud.BigQuery.V2;
+using Microsoft.AspNetCore.Mvc;
+using sisyphish.Filters;
 using sisyphish.Tools.Discord.Core.Models;
 using sisyphish.Tools.Discord.Sisyphish.Models;
 
-namespace sisyphish.Tools.Discord;
+namespace sisyphish.Controllers;
 
-public class DiscordInteractionProcessor : IDiscordInteractionProcessor
+[ApiController]
+public class SisyphishController : ControllerBase
 {
-    private readonly BigQueryClient _bigQueryClient;
+    private BigQueryClient _bigQueryClient;
 
-    public DiscordInteractionProcessor(BigQueryClient bigQueryClient)
+    public SisyphishController(BigQueryClient bigQueryClient)
     {
         _bigQueryClient = bigQueryClient;
     }
 
-    public async Task<IDiscordInteractionResponse> ProcessDiscordInteraction(DiscordInteraction interaction)
-    {
-        return (interaction?.Type) switch
-        {
-            DiscordInteractionType.Ping => Pong(),
-            DiscordInteractionType.ApplicationCommand => await ProcessApplicationCommand(interaction),
-            null => new DiscordInteractionErrorResponse { Error = "Interaction type is required" },
-            _ => new DiscordInteractionErrorResponse { Error = "Invalid interaction type" },
-        };
-    }
-
-    private static DiscordInteractionResponse Pong()
-    {
-        return new DiscordInteractionResponse { ContentType = DiscordInteractionResponseContentType.Pong };
-    }
-
-    private async Task<IDiscordInteractionResponse> ProcessApplicationCommand(DiscordInteraction interaction)
-    {
-        return (interaction.Data?.Name) switch
-        {
-            DiscordCommandName.Fish => await ProcessFishCommand(interaction),
-            DiscordCommandName.Reset => await ProcessResetCommand(interaction),
-            _ => new DiscordInteractionErrorResponse { Error = "Invalid command name" },
-        };
-    }
-
-    private async Task<IDiscordInteractionResponse> ProcessFishCommand(DiscordInteraction interaction)
+    [HttpPost("sisyphish/fish")]
+    [GoogleCloud]
+    public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
         var fisher = await GetOrCreateFisher(interaction);
 
-        return new DiscordInteractionResponse
+        var response = new DiscordInteractionEdit
         {
-            ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
-            Data = new DiscordInteractionResponseData
-            {
-                Content = $"Nothing's biting yet, <@{interaction.UserId}>... [Fish caught: {fisher?.FishCaught ?? 0} / Biggest fish: {fisher?.BiggestFish ?? 0} cm]"
-            }
+            Content = $"Nothing's biting yet, <@{interaction.UserId}>... [Fish caught: {fisher?.FishCaught ?? 0} / Biggest fish: {fisher?.BiggestFish ?? 0} cm]"
         };
+
+        await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+            .PatchJsonAsync(response);
+
+        return Ok();
     }
 
-    private async Task<IDiscordInteractionResponse> ProcessResetCommand(DiscordInteraction interaction)
+    [HttpPost("sisyphish/reset")]
+    [GoogleCloud]
+    public async Task<IActionResult> ProcessResetCommand(DiscordInteraction interaction)
     {
         await DeleteFisher(interaction);
 
-        return new DiscordInteractionResponse
+        var response = new DiscordInteractionResponse
         {
             ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
             Data = new DiscordInteractionResponseData
@@ -65,6 +48,11 @@ public class DiscordInteractionProcessor : IDiscordInteractionProcessor
                 Content = $"Bye, <@{interaction.UserId}>!"
             }
         };
+
+        await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+            .PatchJsonAsync(response);
+
+        return Ok();
     }
 
     private async Task<Fisher?> GetOrCreateFisher(DiscordInteraction interaction)
