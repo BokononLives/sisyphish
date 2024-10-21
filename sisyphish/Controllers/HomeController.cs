@@ -1,18 +1,17 @@
-using System.Text.Json;
-using Google.Cloud.Tasks.V2;
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
 using sisyphish.Filters;
+using sisyphish.GoogleCloud;
 
 namespace sisyphish.Controllers;
 
 [ApiController]
 public class HomeController : ControllerBase
 {
-    private readonly CloudTasksClient _cloudTasks;
+    private readonly ICloudTasksService _cloudTasks;
 
-    public HomeController(CloudTasksClient cloudTasks)
+    public HomeController(ICloudTasksService cloudTasks)
     {
         _cloudTasks = cloudTasks;
     }
@@ -57,26 +56,7 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
 
-        var createTaskRequest = new CreateTaskRequest
-        {
-            ParentAsQueueName = QueueName.FromProjectLocationQueue(Config.GoogleProjectId, Config.GoogleLocation, Config.GoogleProjectId),
-            Task = new Google.Cloud.Tasks.V2.Task
-            {
-                HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
-                {
-                    HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
-                    Headers = {{ "Content-Type", "application/json" }},
-                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(JsonSerializer.Serialize(interaction)),
-                    Url = $"{Config.PublicBaseUrl}/sisyphish/fish",
-                    OidcToken = new OidcToken
-                    {
-                        ServiceAccountEmail = Config.GoogleServiceAccount
-                    }
-                }
-            }
-        };
-
-        await _cloudTasks.CreateTaskAsync(createTaskRequest);
+        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
         return response;
     }
@@ -84,27 +64,8 @@ public class HomeController : ControllerBase
     private async Task<IDiscordInteractionResponse> ProcessResetCommand(DiscordInteraction interaction)
     {
         var response = new DeferredDiscordInteractionResponse();
-
-        var createTaskRequest = new CreateTaskRequest
-        {
-            ParentAsQueueName = QueueName.FromProjectLocationQueue(Config.GoogleProjectId, Config.GoogleLocation, Config.GoogleProjectId),
-            Task = new Google.Cloud.Tasks.V2.Task
-            {
-                HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
-                {
-                    HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
-                    Headers = {{ "Content-Type", "application/json" }},
-                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(JsonSerializer.Serialize(interaction)),
-                    Url = $"{Config.PublicBaseUrl}/sisyphish/reset",
-                    OidcToken = new OidcToken
-                    {
-                        ServiceAccountEmail = Config.GoogleServiceAccount
-                    }
-                }
-            }
-        };
-
-        await _cloudTasks.CreateTaskAsync(createTaskRequest);
+        
+        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
 
         return response;
     }
