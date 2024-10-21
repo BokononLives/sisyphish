@@ -93,7 +93,7 @@ public class SisyphishController : ControllerBase
                     content.AppendLine($"(Biggest fish caught so far: {fisher?.BiggestFish} cm)");
                 }
 
-                content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher?.FishCaught}");
+                content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher?.FishCaught + 1}");
             }
         }
 
