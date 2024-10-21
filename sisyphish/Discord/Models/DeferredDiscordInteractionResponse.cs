@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace sisyphish.Tools.Discord.Core.Models;
+namespace sisyphish.Discord.Models;
 
 public class DeferredDiscordInteractionResponse : IDiscordInteractionResponse
 {

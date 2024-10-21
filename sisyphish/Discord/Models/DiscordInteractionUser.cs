@@ -1,4 +1,4 @@
-namespace sisyphish.Tools.Discord.Core.Models;
+namespace sisyphish.Discord.Models;
 
 public class DiscordInteractionUser
 {

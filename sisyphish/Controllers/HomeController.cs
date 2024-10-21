@@ -1,11 +1,9 @@
-using System.Text;
 using System.Text.Json;
 using Google.Cloud.Tasks.V2;
 using Microsoft.AspNetCore.Mvc;
+using sisyphish.Discord.Models;
+using sisyphish.Extensions;
 using sisyphish.Filters;
-using sisyphish.Tools.Discord;
-using sisyphish.Tools.Discord.Core.Models;
-using sisyphish.Tools.Discord.Sisyphish.Models;
 
 namespace sisyphish.Controllers;
 
