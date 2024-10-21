@@ -29,7 +29,7 @@ public class SisyphishController : ControllerBase
 
         var biteRoll = Random.Shared.Next(1, 10);
 
-        if (biteRoll <= 6)
+        if (biteRoll <= 4)
         {
             content.AppendLine("...But nothing's biting!");
         }
@@ -65,7 +65,7 @@ public class SisyphishController : ControllerBase
                 content.AppendLine("It's a massive trophy fish! Don't let this one get away!");
             }
 
-            var reelStrength = 0;
+            var reelStrength = 2;
             int reelRoll;
 
             do
