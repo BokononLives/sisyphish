@@ -67,7 +67,8 @@ public class HomeController : ControllerBase
                 HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
                 {
                     HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
-                    Body =  Google.Protobuf.ByteString.CopyFrom(JsonSerializer.Serialize(interaction), Encoding.UTF8),
+                    Headers = {{ "Content-Type", "application/json" }},
+                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(JsonSerializer.Serialize(interaction)),
                     Url = $"{Config.PublicBaseUrl}/sisyphish/fish",
                     OidcToken = new OidcToken
                     {
@@ -94,7 +95,8 @@ public class HomeController : ControllerBase
                 HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
                 {
                     HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
-                    Body =  Google.Protobuf.ByteString.CopyFrom(JsonSerializer.Serialize(interaction), Encoding.UTF8),
+                    Headers = {{ "Content-Type", "application/json" }},
+                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(JsonSerializer.Serialize(interaction)),
                     Url = $"{Config.PublicBaseUrl}/sisyphish/reset",
                     OidcToken = new OidcToken
                     {
