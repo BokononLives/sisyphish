@@ -27,6 +27,8 @@ public class SisyphishController : ControllerBase
         var content = new StringBuilder();
         content.AppendLine($"You cast your line into the Sea of Possibilities...");
 
+        var isCatch = false;
+
         var biteRoll = Random.Shared.Next(1, 10);
 
         if (biteRoll <= 4)
@@ -80,6 +82,7 @@ public class SisyphishController : ControllerBase
             }
             else
             {
+                isCatch = true;
                 content.AppendLine($"You reel it in! Congratulations! You got a fish. It's {fishSize} cm!");
                 
                 if (fishSize > fisher!.BiggestFish)
@@ -94,9 +97,6 @@ public class SisyphishController : ControllerBase
                 fisher.FishCaught += 1;
                 fisher.BiggestFish = Math.Max(fisher.BiggestFish!.Value, fishSize);
 
-                await AddFish(interaction, fisher);
-                
-
                 content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher.FishCaught}");
             }
         }
@@ -108,6 +108,11 @@ public class SisyphishController : ControllerBase
 
         await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
             .PatchJsonAsync(response);
+        
+        if (isCatch)
+        {
+            await AddFish(interaction, fisher!);
+        }
 
         return Ok();
     }
