@@ -1,6 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace sisyphish.Tools.Discord.Core.Models;
 
 public class DiscordInteractionEdit
 {
-    public string? Content { get; set; }
+    [JsonPropertyName("content")] public string? Content { get; set; }
 }
