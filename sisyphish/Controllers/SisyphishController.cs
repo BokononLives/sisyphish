@@ -81,19 +81,23 @@ public class SisyphishController : ControllerBase
             else
             {
                 content.AppendLine($"You reel it in! Congratulations! You got a fish. It's {fishSize} cm!");
-
-                await AddFish(interaction, fishSize);
                 
-                if (fishSize > fisher?.BiggestFish)
+                if (fishSize > fisher!.BiggestFish)
                 {
                     content.AppendLine($"A new personal best!");
                 }
                 else
                 {
-                    content.AppendLine($"(Biggest fish caught so far: {fisher?.BiggestFish} cm)");
+                    content.AppendLine($"(Biggest fish caught so far: {fisher.BiggestFish} cm)");
                 }
 
-                content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher?.FishCaught + 1}");
+                fisher.FishCaught += 1;
+                fisher.BiggestFish = Math.Max(fisher.BiggestFish!.Value, fishSize);
+
+                await AddFish(interaction, fisher);
+                
+
+                content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher.FishCaught}");
             }
         }
 
@@ -186,22 +190,20 @@ public class SisyphishController : ControllerBase
         return fisher;
     }
 
-    private async Task AddFish(DiscordInteraction interaction, int fishSize)
+    private async Task AddFish(DiscordInteraction interaction, Fisher fisher)
     {
         var args = new []
         {
             new BigQueryParameter("discord_user_id", BigQueryDbType.String, interaction.UserId),
-            new BigQueryParameter("fish_size", BigQueryDbType.Int64, fishSize)
+            new BigQueryParameter("fish_caught", BigQueryDbType.Int64, fisher.FishCaught),
+            new BigQueryParameter("biggest_fish", BigQueryDbType.Int64, fisher.BiggestFish)
         };
 
         await _bigQueryClient.ExecuteQueryAsync(@"
             update sisyphish.fishers
-            set fish_caught = fish_caught + 1,
-            biggest_fish = GREATEST(biggest_fish, @fish_size)
-            where discord_user_id = @discord_user_id
-                (id, created_at, discord_user_id, fish_caught, biggest_fish)
-            values
-                (@id, @created_at, @discord_user_id, @fish_caught, @biggest_fish)", args);
+            set fish_caught = @fish_caught,
+            biggest_fish = @biggest_fish
+            where discord_user_id = @discord_user_id", args);
     }
 
     private async Task DeleteFisher(DiscordInteraction interaction)
