@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace sisyphish.Controllers;
 
 [ApiController]
-[Route("test")]
 public class TestController : ControllerBase
 {
     private readonly BigQueryClient _bigQueryClient;
@@ -15,7 +14,7 @@ public class TestController : ControllerBase
         _bigQueryClient = bigQueryClient;
     }
 
-    [HttpGet(Name = "test")]
+    [HttpGet("test")]
     public async Task<string> Get()
     {
         var args = new [] { new BigQueryParameter("id", BigQueryDbType.String, "31187caec46b46ee99b04fc751de5e02") };

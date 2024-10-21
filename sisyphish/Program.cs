@@ -1,13 +1,13 @@
 using Google.Cloud.BigQuery.V2;
-using sisyphish.Tools.Discord;
+using Google.Cloud.Tasks.V2;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IDiscordInteractionProcessor, DiscordInteractionProcessor>();
 builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId));
+builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Build());
 
 var app = builder.Build();
 

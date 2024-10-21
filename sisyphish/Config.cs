@@ -2,6 +2,7 @@ public class Config
 {
     public static string BaseUrl => IsDevelopment ? "http://localhost" : "http://0.0.0.0";
     public static string DiscordApplicationId => GetValue("DISCORD_APPLICATION_ID");
+    public static string DiscordBaseUrl => "https://discord.com/api/v10";
     public static string DiscordPublicKey => GetValue("DISCORD_PUBLIC_KEY");
     public static string DiscordToken => GetValue("DISCORD_TOKEN");
     public static string GoogleLocation => "us-central1";
