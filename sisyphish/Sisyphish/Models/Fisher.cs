@@ -1,4 +1,4 @@
-namespace sisyphish.Tools.Discord.Sisyphish.Models;
+namespace sisyphish.Sisyphish.Models;
 
 public class Fisher
 {

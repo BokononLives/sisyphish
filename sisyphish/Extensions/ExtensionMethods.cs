@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using sisyphish.Tools.Discord.Core.Models;
+using sisyphish.Discord.Models;
 
-namespace sisyphish.Tools.Discord;
+namespace sisyphish.Extensions;
 
-public static class ExtensionMethods
+public static class ControllerBaseExtensions
 {
     public static IActionResult From(this ControllerBase controller, IDiscordInteractionResponse response)
     {

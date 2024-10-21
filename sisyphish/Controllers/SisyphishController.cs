@@ -1,16 +1,16 @@
 using Flurl.Http;
 using Google.Cloud.BigQuery.V2;
 using Microsoft.AspNetCore.Mvc;
+using sisyphish.Discord.Models;
 using sisyphish.Filters;
-using sisyphish.Tools.Discord.Core.Models;
-using sisyphish.Tools.Discord.Sisyphish.Models;
+using sisyphish.Sisyphish.Models;
 
 namespace sisyphish.Controllers;
 
 [ApiController]
 public class SisyphishController : ControllerBase
 {
-    private BigQueryClient _bigQueryClient;
+    private readonly BigQueryClient _bigQueryClient;
 
     public SisyphishController(BigQueryClient bigQueryClient)
     {
