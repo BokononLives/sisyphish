@@ -22,6 +22,11 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
+        var deferral = new DeferredDiscordInteractionResponse();
+        
+        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
+            .PostJsonAsync(deferral);
+        
         var fisher = await GetOrCreateFisher(interaction);
 
         var expedition = GoFish();
@@ -42,17 +47,13 @@ public class SisyphishController : ControllerBase
         //TODO: Google BigQuery jobless for low latency queries?
             //switch to Firestore or Postgres or whatever if necessary
 
-        var response = new
+        var response = new DiscordInteractionEdit
         {
-            type = 4,
-            data = new
-            {
-                content = content
-            }
+            Content = content
         };
         
-        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
-            .PostJsonAsync(response);
+        await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+            .PatchJsonAsync(response);
         
         if (expedition.CaughtFish == true)
         {
