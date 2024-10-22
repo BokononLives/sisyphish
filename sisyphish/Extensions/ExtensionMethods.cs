@@ -10,8 +10,9 @@ public static class ControllerBaseExtensions
         switch (response.ResponseType)
         {
             case DiscordInteractionResponseType.DiscordInteractionResponse:
-            case DiscordInteractionResponseType.DeferredDiscordInteractionResponse:
                 return controller.Ok(response);
+            case DiscordInteractionResponseType.DeferredDiscordInteractionResponse:
+                return controller.Accepted();
             case DiscordInteractionResponseType.DiscordInteractionErrorResponse:
                 return controller.BadRequest(response);
             default:
