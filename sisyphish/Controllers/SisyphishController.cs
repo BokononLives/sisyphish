@@ -42,13 +42,17 @@ public class SisyphishController : ControllerBase
         //TODO: Google BigQuery jobless for low latency queries?
             //switch to Firestore or Postgres or whatever if necessary
 
-        var response = new DiscordInteractionEdit
+        var response = new DiscordInteractionResponse
         {
-            Content = content
+            ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
+            Data = new DiscordInteractionResponseData
+            {
+                Content = content
+            }
         };
-
-        await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
-            .PatchJsonAsync(response);
+        
+        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
+            .PostJsonAsync(response);
         
         if (expedition.CaughtFish == true)
         {
