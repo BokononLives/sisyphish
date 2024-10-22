@@ -24,97 +24,80 @@ public class SisyphishController : ControllerBase
     {
         var fisher = await GetOrCreateFisher(interaction);
 
-        var content = new StringBuilder();
-        content.AppendLine($"You cast your line into the Sea of Possibilities...");
+        var expedition = GoFish();
 
-        var isCatch = false;
-
-        var biteRoll = Random.Shared.Next(1, 10);
-
-        if (biteRoll <= 4)
+        if (expedition.CaughtFish == true)
         {
-            content.AppendLine("...But nothing's biting!");
+            fisher!.FishCaught += 1;
+            fisher.BiggestFish = Math.Max(fisher.BiggestFish!.Value, expedition.FishSize!.Value);
         }
-        else
-        {
-            var fishSize = 0;
-            int fishRoll;
 
-            do
-            {
-                fishRoll = Random.Shared.Next(1, 10);
-                fishSize += fishRoll;
-            } while (fishRoll == 10);
-
-            if (fishRoll <= 2)
-            {
-                content.AppendLine("You feel the smallest nibble...");
-            }
-            else if (fishRoll <= 5)
-            {
-                content.AppendLine("Something's biting!");
-            }
-            else if (fishRoll <= 20)
-            {
-                content.AppendLine("Something's biting, and it's a pretty big one!");
-            }
-            else if (fishRoll <= 50)
-            {
-                content.AppendLine("Something's biting, and it's a HUGE one!");
-            }
-            else
-            {
-                content.AppendLine("It's a massive trophy fish! Don't let this one get away!");
-            }
-
-            var reelStrength = 2;
-            int reelRoll;
-
-            do
-            {
-                reelRoll = Random.Shared.Next(1, 10);
-                reelStrength += reelRoll;
-            } while (reelRoll == 10);
-
-            if (reelStrength < fishSize)
-            {
-                content.AppendLine("It got away...");
-            }
-            else
-            {
-                isCatch = true;
-                content.AppendLine($"You reel it in! Congratulations! You got a fish. It's {fishSize} cm!");
-                
-                if (fishSize > fisher!.BiggestFish)
-                {
-                    content.AppendLine($"A new personal best!");
-                }
-                else
-                {
-                    content.AppendLine($"(Biggest fish caught so far: {fisher.BiggestFish} cm)");
-                }
-
-                fisher.FishCaught += 1;
-                fisher.BiggestFish = Math.Max(fisher.BiggestFish!.Value, fishSize);
-
-                content.AppendLine($"Fish caught by <@{interaction.UserId}>: {fisher.FishCaught}");
-            }
-        }
+        var content = expedition.ToString(fisher!);
+        
+        //TODO: handle rapid or concurrent requests. Only allow one per user at a time, or update fish count in realtime.
+            //multiple dependendent tasks?
+            //table of fish?
+        //account for "user deleted message" error - distinguish between "message doesn't exist yet" timing issue?
+            //switch to 202 and Callback style?
+        //TODO: Google BigQuery jobless for low latency queries?
+            //switch to Firestore or Postgres or whatever if necessary
 
         var response = new DiscordInteractionEdit
         {
-            Content = content.ToString()
+            Content = content
         };
 
         await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
             .PatchJsonAsync(response);
         
-        if (isCatch)
+        if (expedition.CaughtFish == true)
         {
             await AddFish(interaction, fisher!);
         }
 
         return Ok();
+    }
+
+    private static Expedition GoFish()
+    {
+        var expedition = new Expedition
+        {
+            FishSize = null,
+            CaughtFish = false
+        };
+
+        var biteRoll = Random.Shared.Next(1, 10);
+        if (biteRoll <= 4)
+        {
+            return expedition;
+        }
+
+        var fishSize = 0;
+        int fishRoll;
+
+        do
+        {
+            fishRoll = Random.Shared.Next(1, 11);
+            fishSize += fishRoll;
+        } while (fishRoll == 10);
+
+        expedition.FishSize = fishSize;
+
+        var reelStrength = 2;
+        int reelRoll;
+
+        do
+        {
+            reelRoll = Random.Shared.Next(1, 10);
+            reelStrength += reelRoll;
+        } while (reelRoll == 10);
+
+        if (reelStrength >= fishSize)
+        {
+            expedition.CaughtFish = true;
+        }
+
+        return expedition;
     }
 
     [HttpPost("sisyphish/reset")]
