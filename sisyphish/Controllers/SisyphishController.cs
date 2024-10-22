@@ -42,12 +42,12 @@ public class SisyphishController : ControllerBase
         //TODO: Google BigQuery jobless for low latency queries?
             //switch to Firestore or Postgres or whatever if necessary
 
-        var response = new DiscordInteractionResponse
+        var response = new
         {
-            ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
-            Data = new DiscordInteractionResponseData
+            type = 4,
+            data = new
             {
-                Content = content
+                content = content
             }
         };
         
