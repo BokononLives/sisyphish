@@ -22,7 +22,10 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
-        var deferral = new DeferredDiscordInteractionResponse();
+        var deferral = new
+        {
+            type = 5
+        };
         
         await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
             .PostJsonAsync(deferral);
