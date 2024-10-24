@@ -1,13 +1,24 @@
 using System.Text;
+using System.Text.Json;
+using Flurl.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NSec.Cryptography;
+using sisyphish.Discord.Models;
+using sisyphish.GoogleCloud;
 
 namespace sisyphish.Filters;
 
-public class DiscordAttribute : ActionFilterAttribute
+public class DiscordAttribute : IAsyncActionFilter
 {
-    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    private readonly ICloudTasksService _cloudTasks;
+
+    public DiscordAttribute(ICloudTasksService cloudTasks)
+    {
+        _cloudTasks = cloudTasks;
+    }
+
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
 
@@ -22,6 +33,39 @@ public class DiscordAttribute : ActionFilterAttribute
         {
             context.Result = new UnauthorizedObjectResult("Invalid request");
             return;
+        }
+
+        if (context.HttpContext.Request.ContentType?.Equals("application/json", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
+            if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
+            {
+                switch (interaction.Data?.Name)
+                {
+                    case DiscordCommandName.Fish:
+                        context.HttpContext.Response.OnCompleted(async () =>
+                        {
+                            if (context.HttpContext.Response.StatusCode == 202)
+                            {
+                                await SendDiscordCallback(interaction);
+                                await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
+                            }
+                        });
+                        break;
+                    case DiscordCommandName.Reset:
+                        context.HttpContext.Response.OnCompleted(async () =>
+                        {
+                            if (context.HttpContext.Response.StatusCode == 202)
+                            {
+                                await SendDiscordCallback(interaction);
+                                await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
+                            }
+                        });
+                        break;
+                    default:
+                        return;
+                }
+            }
         }
         
         await next();
@@ -38,5 +82,16 @@ public class DiscordAttribute : ActionFilterAttribute
         }
 
         return bytes;
+    }
+
+    private async Task SendDiscordCallback(DiscordInteraction interaction)
+    {
+        var deferral = new
+        {
+            type = 5
+        };
+
+        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
+            .PostJsonAsync(deferral);
     }
 }

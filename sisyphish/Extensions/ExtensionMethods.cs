@@ -11,7 +11,7 @@ public static class ControllerBaseExtensions
         {
             case DiscordInteractionResponseType.DiscordInteractionResponse:
                 return controller.Ok(response);
-            case DiscordInteractionResponseType.DeferredDiscordInteractionResponse:
+            case DiscordInteractionResponseType.DeferredDiscordInteractionResponse: //TODO: probably have to go back to the original way, oh well
                 return controller.Accepted();
             case DiscordInteractionResponseType.DiscordInteractionErrorResponse:
                 return controller.BadRequest(response);
