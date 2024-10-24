@@ -22,7 +22,7 @@ public class HomeController : ControllerBase
         return "Hello world!";
     }
 
-    [Discord]
+    [ServiceFilter(typeof(DiscordAttribute))]
     [HttpPost("")]
     public async Task<IActionResult> PostAsync(DiscordInteraction interaction)
     {
@@ -56,7 +56,7 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
 
-        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
+        //await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
         return response;
     }
@@ -65,7 +65,7 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
         
-        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
+        //await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
 
         return response;
     }
