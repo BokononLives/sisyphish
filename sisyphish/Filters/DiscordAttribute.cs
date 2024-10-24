@@ -4,6 +4,7 @@ using System.Text.Json;
 using Flurl.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.VisualBasic;
 using NSec.Cryptography;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud;
@@ -38,9 +39,11 @@ public class DiscordAttribute : IAsyncActionFilter
             return;
         }
 
+        var interaction = (DiscordInteraction?)null;
+
         if (context.HttpContext.Request.ContentType?.Equals("application/json", StringComparison.InvariantCultureIgnoreCase) == true)
         {
-            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
+            interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
             if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
             {
                 switch (interaction.Data?.Name)
@@ -74,7 +77,7 @@ public class DiscordAttribute : IAsyncActionFilter
         }
         
 
-        _logger.LogInformation("Executing action with Discord attribute");
+        _logger.LogInformation($"Executing action with Discord attribute: {JsonSerializer.Serialize(interaction)}");
 
         await next();
     }
