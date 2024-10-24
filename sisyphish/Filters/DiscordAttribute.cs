@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Flurl.Http;
@@ -12,10 +13,12 @@ namespace sisyphish.Filters;
 public class DiscordAttribute : IAsyncActionFilter
 {
     private readonly ICloudTasksService _cloudTasks;
+    private readonly ILogger<DiscordAttribute> _logger;
 
-    public DiscordAttribute(ICloudTasksService cloudTasks)
+    public DiscordAttribute(ICloudTasksService cloudTasks, ILogger<DiscordAttribute> logger)
     {
         _cloudTasks = cloudTasks;
+        _logger = logger;
     }
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -45,7 +48,8 @@ public class DiscordAttribute : IAsyncActionFilter
                     case DiscordCommandName.Fish:
                         context.HttpContext.Response.OnCompleted(async () =>
                         {
-                            if (context.HttpContext.Response.StatusCode == 202)
+                            _logger.LogInformation("Logging from within Response.OnCompleted");
+                            if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
                             {
                                 await SendDiscordCallback(interaction);
                                 await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
@@ -55,7 +59,8 @@ public class DiscordAttribute : IAsyncActionFilter
                     case DiscordCommandName.Reset:
                         context.HttpContext.Response.OnCompleted(async () =>
                         {
-                            if (context.HttpContext.Response.StatusCode == 202)
+                            _logger.LogInformation("Logging from within Response.OnCompleted");
+                            if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
                             {
                                 await SendDiscordCallback(interaction);
                                 await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
@@ -68,6 +73,9 @@ public class DiscordAttribute : IAsyncActionFilter
             }
         }
         
+
+        _logger.LogInformation("Executing action with Discord attribute");
+
         await next();
     }
 
