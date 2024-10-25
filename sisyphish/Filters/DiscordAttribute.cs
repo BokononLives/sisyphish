@@ -77,7 +77,7 @@ public class DiscordAttribute : IAsyncActionFilter
         }
         
 
-        _logger.LogInformation($"Executing action with Discord attribute: {JsonSerializer.Serialize(interaction)}");
+        _logger.LogInformation($"Executing action with Discord attribute: {interaction?.Id}");
 
         await next();
     }
