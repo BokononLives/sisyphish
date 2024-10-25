@@ -44,9 +44,11 @@ public class DiscordAttribute : IAsyncActionFilter
 
         try
         {
-            var jsonSerializerOptions = JsonSerializerOptions.Default;
-            jsonSerializerOptions.PropertyNameCaseInsensitive = true;
-            jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+            var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerOptions.Default)
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            };
 
             var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody, jsonSerializerOptions);
             _logger.LogInformation($"interaction = {JsonSerializer.Serialize(interaction)}");
