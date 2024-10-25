@@ -59,19 +59,22 @@ public class DiscordAttribute : IAsyncActionFilter
                     case DiscordCommandName.Fish:
                         context.HttpContext.Response.OnCompleted(async () =>
                         {
-                            _logger.LogInformation($"Logging from within Response.OnCompleted: {context.HttpContext.Response.StatusCode}");
-                            if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
+                            await Task.Run(async () =>
                             {
-                                try
+                                _logger.LogInformation($"Logging from within Response.OnCompleted: {context.HttpContext.Response.StatusCode}");
+                                if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
                                 {
-                                await SendDiscordCallback(interaction);
-                                await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
+                                    try
+                                    {
+                                        await SendDiscordCallback(interaction);
+                                        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogInformation(ex.ToString());
+                                    }
                                 }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogInformation(ex.ToString());
-                                }
-                            }
+                            });
                         });
                         break;
                     case DiscordCommandName.Reset:
