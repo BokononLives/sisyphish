@@ -59,7 +59,7 @@ public class DiscordAttribute : IAsyncActionFilter
                     case DiscordCommandName.Fish:
                         context.HttpContext.Response.OnCompleted(async () =>
                         {
-                            _logger.LogInformation("Logging from within Response.OnCompleted");
+                            _logger.LogInformation($"Logging from within Response.OnCompleted: {context.HttpContext.Response.StatusCode}");
                             if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
                             {
                                 await SendDiscordCallback(interaction);
