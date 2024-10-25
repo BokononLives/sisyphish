@@ -62,8 +62,15 @@ public class DiscordAttribute : IAsyncActionFilter
                             _logger.LogInformation($"Logging from within Response.OnCompleted: {context.HttpContext.Response.StatusCode}");
                             if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
                             {
+                                try
+                                {
                                 await SendDiscordCallback(interaction);
                                 await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogInformation(ex.ToString());
+                                }
                             }
                         });
                         break;
