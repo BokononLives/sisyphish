@@ -4,7 +4,7 @@ using System.Text.Json;
 using Flurl.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.VisualBasic;
+using Microsoft.Extensions.Options;
 using NSec.Cryptography;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud;
@@ -15,11 +15,13 @@ public class DiscordAttribute : IAsyncActionFilter
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly ILogger<DiscordAttribute> _logger;
+    private readonly IOptions<JsonSerializerOptions> _jsonOptions;
 
-    public DiscordAttribute(ICloudTasksService cloudTasks, ILogger<DiscordAttribute> logger)
+    public DiscordAttribute(ICloudTasksService cloudTasks, ILogger<DiscordAttribute> logger, IOptions<JsonSerializerOptions> jsonOptions)
     {
         _cloudTasks = cloudTasks;
         _logger = logger;
+        _jsonOptions = jsonOptions;
     }
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -41,7 +43,7 @@ public class DiscordAttribute : IAsyncActionFilter
 
         try
         {
-            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
+            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody, _jsonOptions.Value);
             if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
             {
                 _logger.LogInformation($"We have an interaction: {JsonSerializer.Serialize(interaction)}");
