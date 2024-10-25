@@ -81,8 +81,9 @@ public class DiscordAttribute : IAsyncActionFilter
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogInformation(ex.ToString());
         }
 
         await next();
