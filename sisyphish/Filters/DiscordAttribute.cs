@@ -44,6 +44,8 @@ public class DiscordAttribute : IAsyncActionFilter
             var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
             if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
             {
+                _logger.LogInformation($"We have an interaction: {JsonSerializer.Serialize(interaction)}");
+
                 switch (interaction.Data?.Name)
                 {
                     case DiscordCommandName.Fish:
