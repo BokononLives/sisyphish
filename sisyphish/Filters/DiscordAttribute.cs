@@ -16,13 +16,11 @@ public class DiscordAttribute : IAsyncActionFilter
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly ILogger<DiscordAttribute> _logger;
-    private readonly IOptions<JsonSerializerOptions> _jsonOptions;
 
-    public DiscordAttribute(ICloudTasksService cloudTasks, ILogger<DiscordAttribute> logger, IOptions<JsonSerializerOptions> jsonOptions)
+    public DiscordAttribute(ICloudTasksService cloudTasks, ILogger<DiscordAttribute> logger)
     {
         _cloudTasks = cloudTasks;
         _logger = logger;
-        _jsonOptions = jsonOptions;
     }
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -46,7 +44,11 @@ public class DiscordAttribute : IAsyncActionFilter
 
         try
         {
-            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody, _jsonOptions.Value);
+            var jsonSerializerOptions = JsonSerializerOptions.Default;
+            jsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+
+            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody, jsonSerializerOptions);
             _logger.LogInformation($"interaction = {JsonSerializer.Serialize(interaction)}");
             if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
             {
