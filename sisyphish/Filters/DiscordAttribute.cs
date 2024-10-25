@@ -39,11 +39,9 @@ public class DiscordAttribute : IAsyncActionFilter
             return;
         }
 
-        var interaction = (DiscordInteraction?)null;
-
-        if (context.HttpContext.Request.ContentType?.Equals("application/json", StringComparison.InvariantCultureIgnoreCase) == true)
+        try
         {
-            interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
+            var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody);
             if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
             {
                 switch (interaction.Data?.Name)
@@ -75,9 +73,9 @@ public class DiscordAttribute : IAsyncActionFilter
                 }
             }
         }
-        
-
-        _logger.LogInformation($"Executing action with Discord attribute: {requestBody}");
+        catch
+        {
+        }
 
         await next();
     }
