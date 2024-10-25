@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Flurl.Http;
+using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
@@ -41,13 +42,14 @@ public class DiscordAttribute : IAsyncActionFilter
             return;
         }
 
+        _logger.LogInformation($"Content type = {context.HttpContext.Request.Headers.ContentType}; body = {requestBody}");
+
         try
         {
             var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody, _jsonOptions.Value);
+            _logger.LogInformation($"interaction = {JsonSerializer.Serialize(interaction)}");
             if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
             {
-                _logger.LogInformation($"We have an interaction: {JsonSerializer.Serialize(interaction)}");
-
                 switch (interaction.Data?.Name)
                 {
                     case DiscordCommandName.Fish:
