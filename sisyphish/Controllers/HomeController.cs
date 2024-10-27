@@ -64,6 +64,8 @@ public class HomeController : ControllerBase
 
         await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
             .PostJsonAsync(deferral);
+        
+        Thread.Sleep(5_000);
             
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
