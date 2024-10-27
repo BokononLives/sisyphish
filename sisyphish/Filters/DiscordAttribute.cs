@@ -1,13 +1,7 @@
-using System.Net;
 using System.Text;
-using System.Text.Json;
-using Flurl.Http;
-using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Options;
 using NSec.Cryptography;
-using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud;
 
 namespace sisyphish.Filters;
@@ -40,72 +34,6 @@ public class DiscordAttribute : IAsyncActionFilter
             return;
         }
 
-        // _logger.LogInformation($"Content type = {context.HttpContext.Request.Headers.ContentType}; body = {requestBody}");
-
-        // try
-        // {
-        //     var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerOptions.Default)
-        //     {
-        //         PropertyNameCaseInsensitive = true,
-        //         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
-        //     };
-
-        //     var interaction = JsonSerializer.Deserialize<DiscordInteraction>(requestBody, jsonSerializerOptions);
-        //     _logger.LogInformation($"interaction = {JsonSerializer.Serialize(interaction)}");
-        //     if (interaction?.Type == DiscordInteractionType.ApplicationCommand)
-        //     {
-        //         switch (interaction.Data?.Name)
-        //         {
-        //             case DiscordCommandName.Fish:
-        //                 context.HttpContext.Response.OnCompleted(async () =>
-        //                 {
-        //                     await Task.Run(async () =>
-        //                     {
-        //                         _logger.LogInformation($"Logging from within Response.OnCompleted: {context.HttpContext.Response.StatusCode}");
-        //                         if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
-        //                         {
-        //                             _logger.LogInformation("yes");
-        //                             try
-        //                             {
-        //                                 _logger.LogInformation("contacting discord");
-        //                                 await SendDiscordCallback(interaction);
-        //                                 _logger.LogInformation("contacting gcloud");
-        //                                 await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
-        //                                 _logger.LogInformation("done");
-        //                             }
-        //                             catch (Exception ex)
-        //                             {
-        //                                 _logger.LogInformation(ex.ToString());
-        //                             }
-        //                         }
-        //                         else
-        //                         {
-        //                             _logger.LogInformation("no");
-        //                         }
-        //                     });
-        //                 });
-        //                 break;
-        //             case DiscordCommandName.Reset:
-        //                 context.HttpContext.Response.OnCompleted(async () =>
-        //                 {
-        //                     _logger.LogInformation("Logging from within Response.OnCompleted");
-        //                     if (context.HttpContext.Response.StatusCode == ((int)HttpStatusCode.Accepted))
-        //                     {
-        //                         await SendDiscordCallback(interaction);
-        //                         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
-        //                     }
-        //                 });
-        //                 break;
-        //             default:
-        //                 return;
-        //         }
-        //     }
-        // }
-        // catch (Exception ex)
-        // {
-        //     _logger.LogInformation(ex.ToString());
-        // }
-
         await next();
     }
 
@@ -120,20 +48,5 @@ public class DiscordAttribute : IAsyncActionFilter
         }
 
         return bytes;
-    }
-
-    private async Task SendDiscordCallback(DiscordInteraction interaction)
-    {
-        Thread.Sleep(500);
-
-        var deferral = new
-        {
-            type = 5
-        };
-
-        var response = await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
-            .PostJsonAsync(deferral);
-
-        _logger.LogInformation($"Discord response to callback: {JsonSerializer.Serialize(response)}");
     }
 }

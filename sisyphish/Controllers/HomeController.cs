@@ -56,16 +56,8 @@ public class HomeController : ControllerBase
     private async Task<IDiscordInteractionResponse> ProcessFishCommand(DiscordInteraction interaction)
     {
         var response = new DeferredDiscordInteractionResponse();
-
-        var deferral = new
-        {
-            type = 5
-        };
-
-        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
-            .PostJsonAsync(deferral);
         
-        Thread.Sleep(5_000);
+        await SendDeferredCallbackResponse(interaction);
             
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
@@ -76,8 +68,18 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
         
-        //await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
+        await SendDeferredCallbackResponse(interaction);
+            
+        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
 
         return response;
+    }
+
+    private async Task SendDeferredCallbackResponse(DiscordInteraction interaction)
+    {
+        var deferral = new DiscordDeferralCallbackResponse();
+
+        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
+            .PostJsonAsync(deferral);
     }
 }

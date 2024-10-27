@@ -1,4 +1,3 @@
-using System.Text;
 using Flurl.Http;
 using Google.Cloud.BigQuery.V2;
 using Microsoft.AspNetCore.Mvc;
@@ -22,14 +21,6 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
-        // var deferral = new
-        // {
-        //     type = 5
-        // };
-        
-        // await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
-        //     .PostJsonAsync(deferral);
-        
         var fisher = await GetOrCreateFisher(interaction);
 
         var expedition = GoFish();
@@ -41,10 +32,8 @@ public class SisyphishController : ControllerBase
         }
 
         var content = expedition.ToString(fisher!);
-        //TODO:
-            //handle SIGTERM signal, allowing 10 seconds to clean up before worker is terminated
-            //this gives us enough time to execute code after returning 202 Accepted to Discord
-            //let's use that time to send our Callback and then afterwards send a Pub/Sub (not a Cloud Task) for processing
+        //TODO: be more efficient
+            //is Pub/Sub faster than Cloud Tasks?
         //TODO: handle rapid or concurrent requests. Only allow one per user at a time, or update fish count in realtime.
             //multiple dependendent tasks?
             //table of fish?
