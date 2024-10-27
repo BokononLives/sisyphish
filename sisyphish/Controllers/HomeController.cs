@@ -1,4 +1,3 @@
-using Flurl.Http;
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
@@ -79,7 +78,9 @@ public class HomeController : ControllerBase
     {
         var deferral = new DiscordDeferralCallbackResponse();
 
-        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
-            .PostJsonAsync(deferral);
+        using var httpClient = new HttpClient();
+        await httpClient.PostAsJsonAsync(
+            requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
+            value: deferral);
     }
 }
