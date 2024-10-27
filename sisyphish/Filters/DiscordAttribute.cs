@@ -121,7 +121,9 @@ public class DiscordAttribute : IAsyncActionFilter
             type = 5
         };
 
-        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
+        var response = await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
             .PostJsonAsync(deferral);
+
+        _logger.LogInformation($"Discord response to callback: {JsonSerializer.Serialize(response)}");
     }
 }
