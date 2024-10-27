@@ -124,6 +124,8 @@ public class DiscordAttribute : IAsyncActionFilter
 
     private async Task SendDiscordCallback(DiscordInteraction interaction)
     {
+        Thread.Sleep(500);
+
         var deferral = new
         {
             type = 5
