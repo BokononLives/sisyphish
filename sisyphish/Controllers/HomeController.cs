@@ -1,3 +1,4 @@
+using Flurl.Http;
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
@@ -56,7 +57,15 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
 
-        //await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
+        var deferral = new
+        {
+            type = 5
+        };
+
+        await $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback"
+            .PostJsonAsync(deferral);
+            
+        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
         return response;
     }
