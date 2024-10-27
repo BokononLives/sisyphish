@@ -4,5 +4,5 @@ namespace sisyphish.Discord.Models;
 
 public class DiscordDeferralCallbackResponse
 {
-    [JsonPropertyName("type")] public const int Type = (int)DiscordInteractionResponseContentType.DeferredChannelMessageWithSource;
+    [JsonPropertyName("type")] public static int Type => (int)DiscordInteractionResponseContentType.DeferredChannelMessageWithSource;
 }
