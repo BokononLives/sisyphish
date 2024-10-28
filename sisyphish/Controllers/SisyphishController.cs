@@ -151,6 +151,12 @@ public class SisyphishController : ControllerBase
             Fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().ToList()
         };
 
+        foreach (var fish in firestoreFisher.Fish)
+        {
+            var sizeField = fish["size"];
+            _logger.LogInformation($"fish size field... type = {sizeField.GetType()}... val = {sizeField}")
+        }
+
         return firestoreFisher;
     }
 
