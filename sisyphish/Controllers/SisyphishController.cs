@@ -38,13 +38,11 @@ public class SisyphishController : ControllerBase
         var content = expedition.ToString(fisher!);
         //TODO: be more efficient
             //is Pub/Sub faster than Cloud Tasks?
-        //TODO: handle rapid or concurrent requests. Only allow one per user at a time, or update fish count in realtime.
+            //should we go back to a fish count instead of an array of fish?
+        //TODO: handle rapid or concurrent requests
+            //only allow one per user at a time?
             //multiple dependendent tasks?
-            //table of fish?
         //account for "user deleted message" error - distinguish between "message doesn't exist yet" timing issue?
-            //switch to 202 and Callback style?
-        //TODO: Google BigQuery jobless for low latency queries?
-            //switch to Firestore or Postgres or whatever if necessary
 
         var response = new DiscordInteractionEdit
         {
