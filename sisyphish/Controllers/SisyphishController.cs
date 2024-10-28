@@ -32,7 +32,7 @@ public class SisyphishController : ControllerBase
 
         if (expedition.CaughtFish == true)
         {
-            fisher!.Fish.Add(new Dictionary<string, object> { {"type", "betta_tester"}, {"size", expedition.FishSize! }});
+            fisher!.Fish.Add(new Dictionary<string, object> { {"type", "betta_tester"}, {"size", (long)expedition!.FishSize! }});
         }
 
         var content = expedition.ToString(fisher!);
