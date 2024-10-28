@@ -151,8 +151,6 @@ public class SisyphishController : ControllerBase
             Fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().ToList()
         };
 
-        _logger.LogInformation($"Firestore fisher found! {JsonSerializer.Serialize(firestoreFisher)}");
-
         return firestoreFisher;
     }
 
