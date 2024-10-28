@@ -9,5 +9,5 @@ public class Fisher
     [FirestoreProperty("discord_user_id")] public string? DiscordUserId { get; set; }
     [FirestoreProperty("fish_caught")] public List<Dictionary<string, object>> Fish { get; set; } = new();
     public int? FishCaught => Fish.Count();
-    public int? BiggestFish => Fish.Max(f => (int)f["size"]);
+    public long? BiggestFish => Fish.Max(f => (long)f["size"]);
 }
