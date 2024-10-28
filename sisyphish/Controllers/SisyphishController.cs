@@ -154,7 +154,7 @@ public class SisyphishController : ControllerBase
         foreach (var fish in firestoreFisher.Fish)
         {
             var sizeField = fish["size"];
-            _logger.LogInformation($"fish size field... type = {sizeField.GetType()}... val = {sizeField}")
+            _logger.LogInformation($"fish size field... type = {sizeField.GetType()}... val = {sizeField}");
         }
 
         return firestoreFisher;
