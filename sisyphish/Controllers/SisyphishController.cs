@@ -32,8 +32,7 @@ public class SisyphishController : ControllerBase
 
         if (expedition.CaughtFish == true)
         {
-            fisher!.FishCaught += 1;
-            fisher.BiggestFish = Math.Max(fisher.BiggestFish!.Value, expedition.FishSize!.Value);
+            fisher!.Fish.Add(new Dictionary<string, object> { {"type", "betta_tester"}, {"size", expedition.FishSize! }});
         }
 
         var content = expedition.ToString(fisher!);
