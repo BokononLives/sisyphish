@@ -54,7 +54,7 @@ public class SisyphishController : ControllerBase
         
         if (expedition.CaughtFish == true)
         {
-            await AddFish(fisher!, new Fish { Type = "betta_tester", Size = expedition.FishSize });
+            await AddFish(fisher!, new Fish { Type = "betta_tester", Size = (long)expedition!.FishSize! });
         }
 
         return Ok();
