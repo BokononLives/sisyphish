@@ -30,12 +30,13 @@ public class SisyphishController : ControllerBase
 
         var expedition = GoFish();
 
+        var content = expedition.ToString(fisher!);
+
         if (expedition.CaughtFish == true)
         {
             fisher!.Fish.Add(new Dictionary<string, object> { {"type", "betta_tester"}, {"size", (long)expedition!.FishSize! }});
         }
-
-        var content = expedition.ToString(fisher!);
+        
         //TODO: be more efficient
             //is Pub/Sub faster than Cloud Tasks?
             //should we go back to a fish count instead of an array of fish?
