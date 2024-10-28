@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Flurl.Http;
 using Google.Cloud.BigQuery.V2;
+using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
 using sisyphish.Filters;
@@ -11,16 +13,22 @@ namespace sisyphish.Controllers;
 public class SisyphishController : ControllerBase
 {
     private readonly BigQueryClient _bigQueryClient;
+    private readonly FirestoreDb _firestoreDb;
+    private readonly ILogger<SisyphishController> _logger;
 
-    public SisyphishController(BigQueryClient bigQueryClient)
+    public SisyphishController(BigQueryClient bigQueryClient, FirestoreDb firestoreDb, ILogger<SisyphishController> logger)
     {
         _bigQueryClient = bigQueryClient;
+        _firestoreDb = firestoreDb;
+        _logger = logger;
     }
 
     [HttpPost("sisyphish/fish")]
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
+        _logger.LogInformation("Go fish");
+        
         var fisher = await GetOrCreateFisher(interaction);
 
         var expedition = GoFish();
@@ -128,6 +136,41 @@ public class SisyphishController : ControllerBase
 
     private async Task<Fisher?> GetFisher(DiscordInteraction interaction)
     {
+        try
+        {
+            var documents = await _firestoreDb.Collection("fishers").WhereEqualTo("discord_user_id", interaction.UserId).Limit(1).GetSnapshotAsync();
+            var document = documents.SingleOrDefault();
+
+            if (document != null)
+            {
+                var fields = document.ToDictionary();
+                var fish = ((List<Dictionary<string,object>>)fields["fish_caught"]).Select(f => new Fish
+                {
+                    Type = (string)f["type"],
+                    Size = (long)f["size"]
+                });
+                
+                var firestoreFisher = new Fisher
+                {
+                    Id = document.Id,
+                    CreatedAt = ((Timestamp)fields["created_at"]).ToDateTime(),
+                    DiscordUserId = (string)fields["discord_user_id"],
+                    BiggestFish = fish.Max(f => f.Size) ?? 0,
+                    FishCaught = fish.Count()
+                };
+
+                _logger.LogInformation($"Firestore fisher found! {JsonSerializer.Serialize(firestoreFisher)}");
+
+                return firestoreFisher;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex.ToString());
+        }
+
+        _logger.LogInformation("Firestore failed, trying BigQuery");
+
         var args = new [] { new BigQueryParameter("discord_user_id", BigQueryDbType.String, interaction.UserId) };
         var rows = await _bigQueryClient.ExecuteQueryAsync("select * from sisyphish.fishers where discord_user_id = @discord_user_id", args);
         var row = rows.FirstOrDefault();
