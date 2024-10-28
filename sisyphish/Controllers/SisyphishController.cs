@@ -144,7 +144,7 @@ public class SisyphishController : ControllerBase
             if (document != null)
             {
                 var fields = document.ToDictionary();
-                var fish = ((List<Dictionary<string,object>>)fields["fish_caught"]).Select(f => new Fish
+                var fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().Select(f => new Fish
                 {
                     Type = (string)f["type"],
                     Size = (long)f["size"]
