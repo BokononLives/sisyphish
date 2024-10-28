@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Flurl.Http;
-using Google.Cloud.BigQuery.V2;
 using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
@@ -12,13 +11,11 @@ namespace sisyphish.Controllers;
 [ApiController]
 public class SisyphishController : ControllerBase
 {
-    private readonly BigQueryClient _bigQueryClient;
     private readonly FirestoreDb _firestoreDb;
     private readonly ILogger<SisyphishController> _logger;
 
-    public SisyphishController(BigQueryClient bigQueryClient, FirestoreDb firestoreDb, ILogger<SisyphishController> logger)
+    public SisyphishController(FirestoreDb firestoreDb, ILogger<SisyphishController> logger)
     {
-        _bigQueryClient = bigQueryClient;
         _firestoreDb = firestoreDb;
         _logger = logger;
     }
@@ -60,7 +57,7 @@ public class SisyphishController : ControllerBase
         
         if (expedition.CaughtFish == true)
         {
-            await AddFish(interaction, fisher!);
+            await AddFish(fisher!, new Fish { Type = "betta_tester", Size = expedition.FishSize });
         }
 
         return Ok();
@@ -136,110 +133,78 @@ public class SisyphishController : ControllerBase
 
     private async Task<Fisher?> GetFisher(DiscordInteraction interaction)
     {
-        try
-        {
-            var documents = await _firestoreDb.Collection("fishers").WhereEqualTo("discord_user_id", interaction.UserId).Limit(1).GetSnapshotAsync();
-            var document = documents.SingleOrDefault();
+        var documents = await _firestoreDb.Collection("fishers")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .Limit(1)
+            .GetSnapshotAsync();
+        var document = documents.SingleOrDefault();
 
-            if (document != null)
-            {
-                var fields = document.ToDictionary();
-                var fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().Select(f => new Fish
-                {
-                    Type = (string)f["type"],
-                    Size = (long)f["size"]
-                });
-                
-                var firestoreFisher = new Fisher
-                {
-                    Id = document.Id,
-                    CreatedAt = ((Timestamp)fields["created_at"]).ToDateTime(),
-                    DiscordUserId = (string)fields["discord_user_id"],
-                    BiggestFish = fish.Max(f => f.Size) ?? 0,
-                    FishCaught = fish.Count()
-                };
-
-                _logger.LogInformation($"Firestore fisher found! {JsonSerializer.Serialize(firestoreFisher)}");
-
-                return firestoreFisher;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogInformation(ex.ToString());
-        }
-
-        _logger.LogInformation("Firestore failed, trying BigQuery");
-
-        var args = new [] { new BigQueryParameter("discord_user_id", BigQueryDbType.String, interaction.UserId) };
-        var rows = await _bigQueryClient.ExecuteQueryAsync("select * from sisyphish.fishers where discord_user_id = @discord_user_id", args);
-        var row = rows.FirstOrDefault();
-
-        if (row == null)
+        if (document == null)
         {
             return null;
         }
 
-        var fisher = new Fisher
+        var fields = document.ToDictionary();
+        var fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().Select(f => new Fish
         {
-            Id = row["id"].ToString(),
-            CreatedAt = DateTime.Parse(row["created_at"].ToString()!),
-            DiscordUserId = row["discord_user_id"].ToString(),
-            FishCaught = long.Parse(row["fish_caught"].ToString()!),
-            BiggestFish = long.Parse(row["biggest_fish"].ToString()!)
+            Type = (string)f["type"],
+            Size = (long)f["size"]
+        });
+        
+        var firestoreFisher = new Fisher
+        {
+            Id = document.Id,
+            CreatedAt = ((Timestamp)fields["created_at"]).ToDateTime(),
+            DiscordUserId = (string)fields["discord_user_id"],
+            BiggestFish = fish.Max(f => f.Size) ?? 0,
+            FishCaught = fish.Count()
         };
 
-        return fisher;
+        _logger.LogInformation($"Firestore fisher found! {JsonSerializer.Serialize(firestoreFisher)}");
+
+        return firestoreFisher;
     }
 
     private async Task<Fisher?> CreateFisher(DiscordInteraction interaction)
     {
         var fisher = new Fisher
         {
-            Id = Guid.NewGuid().ToString().Replace("-", string.Empty),
             CreatedAt = DateTime.UtcNow,
             DiscordUserId = interaction.UserId,
+            Fish = [],
             FishCaught = 0,
             BiggestFish = 0
         };
 
-        var args = new []
-        {
-            new BigQueryParameter("id", BigQueryDbType.String, fisher.Id),
-            new BigQueryParameter("created_at", BigQueryDbType.Timestamp, fisher.CreatedAt),
-            new BigQueryParameter("discord_user_id", BigQueryDbType.String, fisher.DiscordUserId),
-            new BigQueryParameter("fish_caught", BigQueryDbType.Int64, fisher.FishCaught),
-            new BigQueryParameter("biggest_fish", BigQueryDbType.Int64, fisher.BiggestFish)
-        };
-
-        await _bigQueryClient.ExecuteQueryAsync(@"
-            insert into sisyphish.fishers
-                (id, created_at, discord_user_id, fish_caught, biggest_fish)
-            values
-                (@id, @created_at, @discord_user_id, @fish_caught, @biggest_fish)", args);
+        var document = await _firestoreDb.Collection("fishers").AddAsync(fisher);
+        fisher.Id = document.Id;
         
         return fisher;
     }
 
-    private async Task AddFish(DiscordInteraction interaction, Fisher fisher)
+    private async Task AddFish(Fisher fisher, Fish fish)
     {
-        var args = new []
-        {
-            new BigQueryParameter("discord_user_id", BigQueryDbType.String, interaction.UserId),
-            new BigQueryParameter("fish_caught", BigQueryDbType.Int64, fisher.FishCaught),
-            new BigQueryParameter("biggest_fish", BigQueryDbType.Int64, fisher.BiggestFish)
-        };
-
-        await _bigQueryClient.ExecuteQueryAsync(@"
-            update sisyphish.fishers
-            set fish_caught = @fish_caught,
-            biggest_fish = @biggest_fish
-            where discord_user_id = @discord_user_id", args);
+        await _firestoreDb.Collection("fishers")
+            .Document(fisher.Id)
+            .UpdateAsync("fish_caught", FieldValue.ArrayUnion(
+                new Dictionary<string, object>{
+                    { "type", fish.Type! },
+                    { "size", fish.Size! }
+                }));
     }
 
     private async Task DeleteFisher(DiscordInteraction interaction)
     {
-        var args = new [] { new BigQueryParameter("discord_user_id", BigQueryDbType.String, interaction.UserId) };
-        await _bigQueryClient.ExecuteQueryAsync("delete from sisyphish.fishers where discord_user_id = @discord_user_id", args);
+        var documents = await _firestoreDb.Collection("fishers")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .Limit(1)
+            .GetSnapshotAsync();
+        
+        var document = documents.SingleOrDefault();
+
+        if (document != null)
+        {
+            await document.Reference.DeleteAsync();
+        }
     }
 }
