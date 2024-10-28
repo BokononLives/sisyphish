@@ -154,9 +154,7 @@ public class SisyphishController : ControllerBase
         {
             Id = document.Id,
             CreatedAt = ((Timestamp)fields["created_at"]).ToDateTime(),
-            DiscordUserId = (string)fields["discord_user_id"],
-            BiggestFish = fish.Max(f => f.Size) ?? 0,
-            FishCaught = fish.Count()
+            DiscordUserId = (string)fields["discord_user_id"]
         };
 
         _logger.LogInformation($"Firestore fisher found! {JsonSerializer.Serialize(firestoreFisher)}");
@@ -170,9 +168,7 @@ public class SisyphishController : ControllerBase
         {
             CreatedAt = DateTime.UtcNow,
             DiscordUserId = interaction.UserId,
-            Fish = [],
-            FishCaught = 0,
-            BiggestFish = 0
+            Fish = []
         };
 
         var document = await _firestoreDb.Collection("fishers").AddAsync(fisher);
