@@ -142,17 +142,13 @@ public class SisyphishController : ControllerBase
         }
 
         var fields = document.ToDictionary();
-        var fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().Select(f => new Fish
-        {
-            Type = (string)f["type"],
-            Size = (long)f["size"]
-        });
         
         var firestoreFisher = new Fisher
         {
             Id = document.Id,
             CreatedAt = ((Timestamp)fields["created_at"]).ToDateTime(),
-            DiscordUserId = (string)fields["discord_user_id"]
+            DiscordUserId = (string)fields["discord_user_id"],
+            Fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().ToList()
         };
 
         _logger.LogInformation($"Firestore fisher found! {JsonSerializer.Serialize(firestoreFisher)}");
