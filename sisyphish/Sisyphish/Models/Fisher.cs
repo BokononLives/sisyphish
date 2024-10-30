@@ -2,6 +2,7 @@ using Google.Cloud.Firestore;
 
 namespace sisyphish.Sisyphish.Models;
 
+[FirestoreData]
 public class Fisher
 {
     [FirestoreProperty("id")] public string? Id { get; set; }
