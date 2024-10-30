@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Flurl.Http;
 using Google.Cloud.Firestore;
+using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
 using sisyphish.Filters;
@@ -25,8 +26,44 @@ public class SisyphishController : ControllerBase
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
         _logger.LogInformation("Go fish");
-        
-        var fisher = await GetOrCreateFisher(interaction);
+
+        var fisher = await GetFisher(interaction) ?? await CreateFisher(interaction);
+        if (fisher == null)
+        {
+            await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+                .PatchJsonAsync(new DiscordInteractionEdit
+                {
+                    Content = $"An unexpected error occurred, please try again later!"
+                });
+
+            return Ok();
+        }
+
+        if (fisher.LockedAt != null && fisher.LockedAt > DateTime.Now.AddMinutes(-1))
+        {
+            await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+                .PatchJsonAsync(new DiscordInteractionEdit
+                {
+                    Content = $"<@{interaction.UserId}>, you are sending messages too quickly, please try again in a moment!"
+                });
+
+            return Ok();
+        }
+
+        try
+        {
+            await LockFisher(fisher);
+        }
+        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
+        {
+            await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+                .PatchJsonAsync(new DiscordInteractionEdit
+                {
+                    Content = $"<@{interaction.UserId}>, you are sending messages too quickly, please try again in a moment!"
+                });
+
+            return Ok();
+        }
 
         var expedition = GoFish();
 
@@ -34,31 +71,61 @@ public class SisyphishController : ControllerBase
 
         if (expedition.CaughtFish == true)
         {
-            fisher!.Fish.Add(new Dictionary<string, object> { {"type", "betta_tester"}, {"size", (long)expedition!.FishSize! }});
+            fisher!.Fish.Add(new Fish { Type = "betta_tester", Size = expedition!.FishSize! });
         }
-        
-        //TODO: be more efficient
-            //is Pub/Sub faster than Cloud Tasks?
-            //should we go back to a fish count instead of an array of fish?
-        //TODO: handle rapid or concurrent requests
-            //only allow one per user at a time?
-            //multiple dependendent tasks?
-        //account for "user deleted message" error - distinguish between "message doesn't exist yet" timing issue?
 
-        var response = new DiscordInteractionEdit
-        {
-            Content = content
-        };
-        
+        //TODO:
+            //should we go back to a fish count instead of an array of fish? (yes)
+            //account for "user deleted message" error - distinguish between "message doesn't exist yet" timing issue? (yes)
+            //multiple dependendent tasks? (eh)
+            //is Pub/Sub faster than Cloud Tasks? (eh)
+
         await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
-            .PatchJsonAsync(response);
-        
+            .PatchJsonAsync(new DiscordInteractionEdit
+            {
+                Content = content
+            });
+
         if (expedition.CaughtFish == true)
         {
             await AddFish(fisher!, new Fish { Type = "betta_tester", Size = (long)expedition!.FishSize! });
         }
 
+        await UnlockFisher(fisher);
+
         return Ok();
+    }
+
+    private async Task<Fisher?> GetFisher(DiscordInteraction interaction)
+    {
+        var documents = await _firestoreDb.Collection("fishers")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .Limit(1)
+            .GetSnapshotAsync();
+
+        var document = documents.SingleOrDefault();
+        if (document == null)
+        {
+            return null;
+        }
+
+        var fisher = document.ConvertTo<Fisher>();
+        fisher.LastUpdated = document.UpdateTime?.ToDateTime();
+        return fisher;
+    }
+
+    private async Task LockFisher(Fisher fisher)
+    {
+        await _firestoreDb.Collection("fishers")
+            .Document(fisher.Id)
+            .UpdateAsync("locked_at", DateTime.Now, Precondition.LastUpdated(Timestamp.FromDateTime(fisher.LastUpdated!.Value)));
+    }
+
+    private async Task UnlockFisher(Fisher fisher)
+    {
+        await _firestoreDb.Collection("fishers")
+            .Document(fisher.Id)
+            .UpdateAsync("locked_at", null);
     }
 
     private static Expedition GoFish()
@@ -120,47 +187,6 @@ public class SisyphishController : ControllerBase
         return Ok();
     }
 
-    private async Task<Fisher?> GetOrCreateFisher(DiscordInteraction interaction)
-    {
-        var fisher =
-               (await GetFisher(interaction))
-            ?? (await CreateFisher(interaction));
-        
-        return fisher;
-    }
-
-    private async Task<Fisher?> GetFisher(DiscordInteraction interaction)
-    {
-        var documents = await _firestoreDb.Collection("fishers")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .Limit(1)
-            .GetSnapshotAsync();
-        var document = documents.SingleOrDefault();
-
-        if (document == null)
-        {
-            return null;
-        }
-
-        var fields = document.ToDictionary();
-        
-        var firestoreFisher = new Fisher
-        {
-            Id = document.Id,
-            CreatedAt = ((Timestamp)fields["created_at"]).ToDateTime(),
-            DiscordUserId = (string)fields["discord_user_id"],
-            Fish = ((List<object>)fields["fish_caught"]).OfType<Dictionary<string,object>>().ToList()
-        };
-
-        foreach (var fish in firestoreFisher.Fish)
-        {
-            var sizeField = fish["size"];
-            _logger.LogInformation($"fish size field... type = {sizeField.GetType()}... val = {sizeField}");
-        }
-
-        return firestoreFisher;
-    }
-
     private async Task<Fisher?> CreateFisher(DiscordInteraction interaction)
     {
         var fisher = new Fisher
@@ -170,9 +196,12 @@ public class SisyphishController : ControllerBase
             Fish = []
         };
 
-        var document = await _firestoreDb.Collection("fishers").AddAsync(fisher);
+        var docRef = await _firestoreDb.Collection("fishers").AddAsync(fisher);
+        var document = await docRef.GetSnapshotAsync();
+
         fisher.Id = document.Id;
-        
+        fisher.LastUpdated = document.UpdateTime?.ToDateTime();
+
         return fisher;
     }
 
@@ -180,11 +209,7 @@ public class SisyphishController : ControllerBase
     {
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
-            .UpdateAsync("fish_caught", FieldValue.ArrayUnion(
-                new Dictionary<string, object>{
-                    { "type", fish.Type! },
-                    { "size", fish.Size! }
-                }));
+            .UpdateAsync("fish_caught", FieldValue.ArrayUnion(fish));
     }
 
     private async Task DeleteFisher(DiscordInteraction interaction)
@@ -193,7 +218,7 @@ public class SisyphishController : ControllerBase
             .WhereEqualTo("discord_user_id", interaction.UserId)
             .Limit(1)
             .GetSnapshotAsync();
-        
+
         var document = documents.SingleOrDefault();
 
         if (document != null)
