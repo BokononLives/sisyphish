@@ -50,7 +50,7 @@ public class Expedition
                 result.AppendLine($"(Biggest fish caught so far: {fisher.BiggestFish} cm)");
             }
 
-            result.AppendLine($"Fish caught by <@{fisher.DiscordUserId}>: {fisher.FishCaught}");
+            result.AppendLine($"Fish caught by <@{fisher.DiscordUserId}>: {fisher.FishCaught + 1}");
         }
         else
         {
