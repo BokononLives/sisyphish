@@ -1,3 +1,4 @@
+using System.Net;
 using Flurl.Http;
 using sisyphish.Discord.Models;
 
@@ -36,10 +37,11 @@ public class DiscordService : IDiscordService
             var response = await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
                 .AllowAnyHttpStatus()
                 .PatchJsonAsync(body);
-            
-            _logger.LogInformation($"Response status code: {response.StatusCode}");
-
-            success = true;
+                
+            if (response.StatusCode == (int)HttpStatusCode.OK)
+            {
+                success = true;
+            }
         }
     }
 }
