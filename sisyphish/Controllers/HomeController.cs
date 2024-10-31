@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
 using sisyphish.Filters;
@@ -10,10 +11,12 @@ namespace sisyphish.Controllers;
 public class HomeController : ControllerBase
 {
     private readonly ICloudTasksService _cloudTasks;
+    private readonly IDiscordService _discord;
 
-    public HomeController(ICloudTasksService cloudTasks)
+    public HomeController(ICloudTasksService cloudTasks, IDiscordService discord)
     {
         _cloudTasks = cloudTasks;
+        _discord = discord;
     }
 
     [HttpGet("")]
@@ -56,7 +59,7 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
         
-        await SendDeferredCallbackResponse(interaction);
+        await _discord.DeferResponse(interaction);
             
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
@@ -67,20 +70,10 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
         
-        await SendDeferredCallbackResponse(interaction);
+        await _discord.DeferResponse(interaction);
             
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
 
         return response;
-    }
-
-    private async Task SendDeferredCallbackResponse(DiscordInteraction interaction)
-    {
-        var deferral = new DiscordDeferralCallbackResponse();
-
-        using var httpClient = new HttpClient();
-        await httpClient.PostAsJsonAsync(
-            requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
-            value: deferral);
     }
 }
