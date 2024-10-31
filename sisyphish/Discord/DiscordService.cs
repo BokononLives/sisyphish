@@ -45,6 +45,8 @@ public class DiscordService : IDiscordService
             {
                 success = true;
             }
+
+            Thread.Sleep(1_000);
         }
 
         if (!success)
