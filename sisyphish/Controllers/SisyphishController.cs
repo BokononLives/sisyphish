@@ -27,8 +27,6 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
-        Thread.Sleep(5_000);
-
         var fisher = await GetFisher(interaction) ?? await CreateFisher(interaction);
         if (fisher == null)
         {
