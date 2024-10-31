@@ -1,6 +1,7 @@
 using Google.Cloud.BigQuery.V2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
+using sisyphish.Discord;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud;
 
@@ -16,6 +17,7 @@ builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GooglePr
 builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Build());
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordAttribute>();
+builder.Services.AddScoped<IDiscordService, DiscordService>();
 
 var app = builder.Build();
 
