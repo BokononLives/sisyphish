@@ -105,6 +105,7 @@ public class SisyphishController : ControllerBase
         }
 
         var fisher = document.ConvertTo<Fisher>();
+        fisher.Id = document.Id;
         fisher.LastUpdated = document.UpdateTime?.ToDateTime();
         return fisher;
     }
