@@ -69,11 +69,6 @@ public class SisyphishController : ControllerBase
 
         var content = expedition.ToString(fisher!);
 
-        if (expedition.CaughtFish == true)
-        {
-            fisher!.Fish.Add(new Fish { Type = "betta_tester", Size = expedition!.FishSize! });
-        }
-
         //TODO:
             //should we go back to a fish count instead of an array of fish? (yes)
             //account for "user deleted message" error - distinguish between "message doesn't exist yet" timing issue? (yes)
@@ -88,7 +83,7 @@ public class SisyphishController : ControllerBase
 
         if (expedition.CaughtFish == true)
         {
-            await AddFish(fisher!, new Fish { Type = "betta_tester", Size = (long)expedition!.FishSize! });
+            await AddFish(fisher!, (long)expedition!.FishSize!);
         }
 
         await UnlockFisher(fisher);
@@ -193,7 +188,8 @@ public class SisyphishController : ControllerBase
         {
             CreatedAt = DateTime.UtcNow,
             DiscordUserId = interaction.UserId,
-            Fish = []
+            FishCaught = 0,
+            BiggestFish = 0
         };
 
         var docRef = await _firestoreDb.Collection("fishers").AddAsync(fisher);
@@ -205,11 +201,15 @@ public class SisyphishController : ControllerBase
         return fisher;
     }
 
-    private async Task AddFish(Fisher fisher, Fish fish)
+    private async Task AddFish(Fisher fisher, long fishSize)
     {
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
-            .UpdateAsync("fish_caught", FieldValue.ArrayUnion(fish));
+            .UpdateAsync(new Dictionary<string, object>
+            {
+                { "fish_caught", FieldValue.Increment(1) },
+                { "biggest_fish", Math.Max(fisher.BiggestFish ?? 0, fishSize) }
+            });
     }
 
     private async Task DeleteFisher(DiscordInteraction interaction)
