@@ -34,6 +34,8 @@ public class DiscordService : IDiscordService
         var attempts = 0;
         while (!success && attempts < 5)
         {
+            attempts++;
+            
             var response = await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
                 .AllowAnyHttpStatus()
                 .PatchJsonAsync(body);
