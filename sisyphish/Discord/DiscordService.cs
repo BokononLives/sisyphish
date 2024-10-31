@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Flurl.Http;
 using sisyphish.Discord.Models;
 
@@ -35,7 +36,7 @@ public class DiscordService : IDiscordService
         while (!success && attempts < 5)
         {
             attempts++;
-            
+
             var response = await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
                 .AllowAnyHttpStatus()
                 .PatchJsonAsync(body);
@@ -45,5 +46,7 @@ public class DiscordService : IDiscordService
                 success = true;
             }
         }
+
+        _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)}");
     }
 }
