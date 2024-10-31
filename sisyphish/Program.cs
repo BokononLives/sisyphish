@@ -1,4 +1,3 @@
-using Google.Cloud.BigQuery.V2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
 using sisyphish.Discord;
@@ -12,7 +11,6 @@ builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped(serviceProvider => BigQueryClient.Create(Config.GoogleProjectId));
 builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GoogleProjectId));
 builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Build());
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
