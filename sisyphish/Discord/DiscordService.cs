@@ -47,6 +47,9 @@ public class DiscordService : IDiscordService
             }
         }
 
-        _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)}");
+        if (!success)
+        {
+            _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)}");
+        }
     }
 }
