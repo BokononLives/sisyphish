@@ -39,7 +39,7 @@ public class SisyphishController : ControllerBase
             return Ok();
         }
 
-        if (fisher.LockedAt != null && fisher.LockedAt > DateTime.Now.AddMinutes(-1))
+        if (fisher.LockedAt != null && fisher.LockedAt > DateTime.UtcNow.AddMinutes(-1))
         {
             await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
                 .PatchJsonAsync(new DiscordInteractionEdit
@@ -114,7 +114,7 @@ public class SisyphishController : ControllerBase
     {
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
-            .UpdateAsync("locked_at", DateTime.Now, Precondition.LastUpdated(Timestamp.FromDateTime(fisher.LastUpdated!.Value)));
+            .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(fisher.LastUpdated!.Value)));
     }
 
     private async Task UnlockFisher(Fisher fisher)
