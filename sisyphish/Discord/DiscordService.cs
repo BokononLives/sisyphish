@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text.Json;
-using Flurl.Http;
 using sisyphish.Discord.Models;
 
 namespace sisyphish.Discord;
@@ -16,12 +15,12 @@ public class DiscordService : IDiscordService
 
     public async Task DeferResponse(DiscordInteraction interaction)
     {
-        var deferral = new DiscordDeferralCallbackResponse();
+        var body = new DiscordDeferralCallbackResponse();
 
         using var httpClient = new HttpClient();
         await httpClient.PostAsJsonAsync(
             requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
-            value: deferral);
+            value: body);
     }
 
     public async Task EditResponse(DiscordInteraction interaction, string content)
@@ -37,21 +36,26 @@ public class DiscordService : IDiscordService
         {
             attempts++;
 
-            var response = await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
-                .AllowAnyHttpStatus()
-                .PatchJsonAsync(body);
-                
-            if (response.StatusCode == (int)HttpStatusCode.OK)
+            using var httpClient = new HttpClient();
+            var response = await httpClient.PatchAsJsonAsync(
+                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
+                value: body
+            );
+
+            if (response.StatusCode == HttpStatusCode.OK)
             {
                 success = true;
             }
-
-            Thread.Sleep(1_000);
+            else
+            {
+                httpClient.Dispose();
+                Thread.Sleep(1_000);
+            }
         }
 
         if (!success)
         {
-            _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)}");
+            _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)} - with: {content}");
         }
     }
 }

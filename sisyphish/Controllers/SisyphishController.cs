@@ -1,4 +1,3 @@
-using Flurl.Http;
 using Google.Cloud.Firestore;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
@@ -27,45 +26,58 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
-        var fisher = await GetFisher(interaction) ?? await CreateFisher(interaction);
-        if (fisher == null)
-        {
-            await _discord.EditResponse(interaction, $"An unexpected error occurred, please try again later!");
+        var initFisherResult = await InitFisher(interaction);
+        var fisher = initFisherResult?.Fisher;
 
-            return Ok();
-        }
+        var expedition = GoFish(fisher);
 
-        if (fisher.LockedAt != null && fisher.LockedAt > DateTime.UtcNow.AddMinutes(-1))
-        {
-            await _discord.EditResponse(interaction, $"<@{interaction.UserId}>, you are sending messages too quickly, please try again in a moment!");
-
-            return Ok();
-        }
-
-        try
-        {
-            await LockFisher(fisher);
-        }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
-        {
-            await _discord.EditResponse(interaction, $"<@{interaction.UserId}>, you are sending messages too quickly, please try again in a moment!");
-
-            return Ok();
-        }
-
-        var expedition = GoFish();
-
-        var content = expedition.ToString(fisher!);
-        await _discord.EditResponse(interaction, content!);
-
-        if (expedition.CaughtFish == true)
-        {
-            await AddFish(fisher!, (long)expedition!.FishSize!);
-        }
-
+        await UpdateFisher(fisher, expedition);
+        await UpdateDiscord(interaction, initFisherResult, expedition);
+              
         await UnlockFisher(fisher);
 
         return Ok();
+    }
+
+    [HttpPost("sisyphish/reset")]
+    [GoogleCloud]
+    public async Task<IActionResult> ProcessResetCommand(DiscordInteraction interaction)
+    {
+        await DeleteFisher(interaction);
+        
+        var content = $"Bye, <@{interaction.UserId}>!";
+        await _discord.EditResponse(interaction, content);
+        
+        return Ok();
+    }
+
+    private async Task<InitFisherResult?> InitFisher(DiscordInteraction interaction)
+    {
+        try
+        {
+            var result = new InitFisherResult();
+
+            var fisher = await GetFisher(interaction) ?? await CreateFisher(interaction);
+            result.Fisher = fisher;
+
+            if (fisher != null && !fisher.IsLocked)
+            {
+                try
+                {
+                    await LockFisher(fisher);
+                    result.InitSuccess = true;
+                }
+                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition) { }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error initializing fisher");
+
+            return new InitFisherResult();
+        }
     }
 
     private async Task<Fisher?> GetFisher(DiscordInteraction interaction)
@@ -87,6 +99,25 @@ public class SisyphishController : ControllerBase
         return fisher;
     }
 
+    private async Task<Fisher?> CreateFisher(DiscordInteraction interaction)
+    {
+        var fisher = new Fisher
+        {
+            CreatedAt = DateTime.UtcNow,
+            DiscordUserId = interaction.UserId,
+            FishCaught = 0,
+            BiggestFish = 0
+        };
+
+        var docRef = await _firestoreDb.Collection("fishers").AddAsync(fisher);
+        var document = await docRef.GetSnapshotAsync();
+
+        fisher.Id = document.Id;
+        fisher.LastUpdated = document.UpdateTime?.ToDateTime();
+
+        return fisher;
+    }
+
     private async Task LockFisher(Fisher fisher)
     {
         await _firestoreDb.Collection("fishers")
@@ -94,15 +125,58 @@ public class SisyphishController : ControllerBase
             .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(fisher.LastUpdated!.Value)));
     }
 
-    private async Task UnlockFisher(Fisher fisher)
+    private async Task UnlockFisher(Fisher? fisher)
+    {
+        try
+        {
+            if (fisher == null)
+            {
+                return;
+            }
+            
+            await _firestoreDb.Collection("fishers")
+                .Document(fisher.Id)
+                .UpdateAsync("locked_at", null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error unlocking fisher");
+        }
+    }
+
+    private async Task AddFish(Fisher fisher, long fishSize)
     {
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
-            .UpdateAsync("locked_at", null);
+            .UpdateAsync(new Dictionary<string, object>
+            {
+                { "fish_caught", FieldValue.Increment(1) },
+                { "biggest_fish", Math.Max(fisher.BiggestFish ?? 0, fishSize) }
+            });
     }
 
-    private static Expedition GoFish()
+    private async Task DeleteFisher(DiscordInteraction interaction)
     {
+        var documents = await _firestoreDb.Collection("fishers")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .Limit(1)
+            .GetSnapshotAsync();
+
+        var document = documents.SingleOrDefault();
+
+        if (document != null)
+        {
+            await document.Reference.DeleteAsync();
+        }
+    }
+
+    private static Expedition? GoFish(Fisher? fisher)
+    {
+        if (fisher == null)
+        {
+            return null;
+        }
+
         var expedition = new Expedition
         {
             FishSize = null,
@@ -143,65 +217,57 @@ public class SisyphishController : ControllerBase
         return expedition;
     }
 
-    [HttpPost("sisyphish/reset")]
-    [GoogleCloud]
-    public async Task<IActionResult> ProcessResetCommand(DiscordInteraction interaction)
+    private async Task UpdateFisher(Fisher? fisher, Expedition? expedition)
     {
-        await DeleteFisher(interaction);
-
-        var response = new DiscordInteractionEdit
+        try
         {
-            Content = $"Bye, <@{interaction.UserId}>!"
-        };
-
-        await $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
-            .PatchJsonAsync(response);
-
-        return Ok();
-    }
-
-    private async Task<Fisher?> CreateFisher(DiscordInteraction interaction)
-    {
-        var fisher = new Fisher
-        {
-            CreatedAt = DateTime.UtcNow,
-            DiscordUserId = interaction.UserId,
-            FishCaught = 0,
-            BiggestFish = 0
-        };
-
-        var docRef = await _firestoreDb.Collection("fishers").AddAsync(fisher);
-        var document = await docRef.GetSnapshotAsync();
-
-        fisher.Id = document.Id;
-        fisher.LastUpdated = document.UpdateTime?.ToDateTime();
-
-        return fisher;
-    }
-
-    private async Task AddFish(Fisher fisher, long fishSize)
-    {
-        await _firestoreDb.Collection("fishers")
-            .Document(fisher.Id)
-            .UpdateAsync(new Dictionary<string, object>
+            if (fisher == null || expedition == null)
             {
-                { "fish_caught", FieldValue.Increment(1) },
-                { "biggest_fish", Math.Max(fisher.BiggestFish ?? 0, fishSize) }
-            });
+                return;
+            }
+            
+            if (expedition.CaughtFish == true)
+            {
+                await AddFish(fisher, (long)expedition.FishSize!);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating fisher");
+        }
     }
 
-    private async Task DeleteFisher(DiscordInteraction interaction)
+    private async Task UpdateDiscord(DiscordInteraction interaction, InitFisherResult? initFisherResult, Expedition? expedition)
     {
-        var documents = await _firestoreDb.Collection("fishers")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .Limit(1)
-            .GetSnapshotAsync();
-
-        var document = documents.SingleOrDefault();
-
-        if (document != null)
+        try
         {
-            await document.Reference.DeleteAsync();
+            var content = GetDiscordContent(initFisherResult, expedition);
+            await _discord.EditResponse(interaction, content!);       
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating Discord");
+        }
+    }
+
+    private static string? GetDiscordContent(InitFisherResult? initFisherResult, Expedition? expedition)
+    {
+        if (initFisherResult?.Fisher == null)
+        {
+            return "An unexpected error occurred, please try again later!";
+        }
+
+        if (!initFisherResult.InitSuccess)
+        {
+            return $"<@{initFisherResult.Fisher.DiscordUserId}>, you are sending messages too quickly, please try again in a moment!";
+        }
+
+        if (expedition == null)
+        {
+            return "An unexpected error occurred, please try again later!";
+        }
+
+        var content = expedition.ToString(initFisherResult.Fisher);
+        return content;
     }
 }
