@@ -29,7 +29,7 @@ public class SisyphishController : ControllerBase
         var initFisherResult = await InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
 
-        var expedition = GoFish(fisher);
+        var expedition = initFisherResult?.InitSuccess == true ? GoFish(fisher) : null;
 
         await UpdateFisher(fisher, expedition);
         await UpdateDiscord(interaction, initFisherResult, expedition);
@@ -60,14 +60,25 @@ public class SisyphishController : ControllerBase
             var fisher = await GetFisher(interaction) ?? await CreateFisher(interaction);
             result.Fisher = fisher;
 
-            if (fisher != null && !fisher.IsLocked)
+            if (fisher == null)
+            {
+                _logger.LogWarning($"Fisher was unexpectedly null - {interaction.UserId}");
+            }
+            else if (fisher.IsLocked)
+            {
+                _logger.LogInformation($"Fisher was locked - {interaction.UserId}");
+            }
+            else
             {
                 try
                 {
                     await LockFisher(fisher);
                     result.InitSuccess = true;
                 }
-                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition) { }
+                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
+                {
+                    _logger.LogInformation($"Failed to lock fisher - {interaction.UserId}");
+                }
             }
 
             return result;
