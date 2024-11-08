@@ -23,11 +23,12 @@ public class DiscordService : IDiscordService
             value: body);
     }
 
-    public async Task EditResponse(DiscordInteraction interaction, string content)
+    public async Task EditResponse(DiscordInteraction interaction, string content, List<DiscordComponent> components)
     {
         var body = new DiscordInteractionEdit
         {
-            Content = content
+            Content = content,
+            Components = components
         };
 
         var success = false;

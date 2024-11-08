@@ -31,7 +31,7 @@ public class SisyphishController : ControllerBase
 
         var expedition = initFisherResult?.InitSuccess == true ? GoFish(fisher) : null;
 
-        await UpdateFisher(fisher, expedition);
+        await UpdateFisher(interaction, fisher, expedition);
         await UpdateDiscord(interaction, initFisherResult, expedition);
               
         await UnlockFisher(fisher);
@@ -46,7 +46,7 @@ public class SisyphishController : ControllerBase
         await DeleteFisher(interaction);
         
         var content = $"Bye, <@{interaction.UserId}>!";
-        await _discord.EditResponse(interaction, content);
+        await _discord.EditResponse(interaction, content, []);
         
         return Ok();
     }
@@ -129,6 +129,19 @@ public class SisyphishController : ControllerBase
         return fisher;
     }
 
+    private async Task CreatePrompt(DiscordInteraction interaction, Expedition expedition)
+    {
+        var prompt = new Prompt
+        {
+            CreatedAt = DateTime.UtcNow,
+            DiscordUserId = interaction.UserId,
+            DiscordPromptId = expedition.PromptId,
+            Event = expedition.Event
+        };
+
+        await _firestoreDb.Collection("prompts").AddAsync(prompt);
+    }
+
     private async Task LockFisher(Fisher fisher)
     {
         await _firestoreDb.Collection("fishers")
@@ -190,11 +203,19 @@ public class SisyphishController : ControllerBase
 
         var expedition = new Expedition
         {
+            Event = Event.None,
             FishSize = null,
             CaughtFish = false
         };
 
-        var biteRoll = Random.Shared.Next(1, 10);
+        var eventRoll = Random.Shared.Next(1, 21);
+        if (eventRoll == 20)
+        {
+            expedition.Event = Event.FoundTreasureChest;
+            return expedition;
+        }
+
+        var biteRoll = Random.Shared.Next(1, 11);
         if (biteRoll <= 4)
         {
             return expedition;
@@ -228,13 +249,22 @@ public class SisyphishController : ControllerBase
         return expedition;
     }
 
-    private async Task UpdateFisher(Fisher? fisher, Expedition? expedition)
+    private async Task UpdateFisher(DiscordInteraction? interaction, Fisher? fisher, Expedition? expedition)
     {
         try
         {
-            if (fisher == null || expedition == null)
+            if (interaction == null || fisher == null || expedition == null)
             {
                 return;
+            }
+
+            switch (expedition.Event)
+            {
+                case Event.FoundTreasureChest:
+                    await CreatePrompt(interaction, expedition);
+                    break;
+                default:
+                    break;
             }
             
             if (expedition.CaughtFish == true)
@@ -253,7 +283,9 @@ public class SisyphishController : ControllerBase
         try
         {
             var content = GetDiscordContent(initFisherResult, expedition);
-            await _discord.EditResponse(interaction, content!);       
+            var components = GetDiscordComponents(initFisherResult, expedition);
+
+            await _discord.EditResponse(interaction, content!, components);
         }
         catch (Exception ex)
         {
@@ -278,7 +310,18 @@ public class SisyphishController : ControllerBase
             return "An unexpected error occurred, please try again later!";
         }
 
-        var content = expedition.ToString(initFisherResult.Fisher);
+        var content = expedition.GetContent(initFisherResult.Fisher);
         return content;
+    }
+
+    private static List<DiscordComponent> GetDiscordComponents(InitFisherResult? initFisherResult, Expedition? expedition)
+    {
+        if (initFisherResult?.Fisher == null || expedition == null)
+        {
+            return [];
+        }
+
+        var components = expedition.GetComponents();
+        return components;
     }
 }

@@ -1,15 +1,30 @@
 using System.Text;
+using sisyphish.Discord.Models;
 
 namespace sisyphish.Sisyphish.Models;
 
 public class Expedition
 {
+    public Expedition()
+    {
+        PromptId = Guid.NewGuid().ToString();
+    }
+
+    public Event Event { get; set; }
     public int? FishSize { get; set; }
     public bool? CaughtFish { get; set; }
-    public string? ToString(Fisher fisher)
+    public string? PromptId { get; }
+
+    public string? GetContent(Fisher fisher)
     {
         var result = new StringBuilder();
         result.AppendLine($"You cast your line into the Sea of Possibilities...");
+
+        if (Event == Event.FoundTreasureChest)
+        {
+            result.AppendLine("Lucky! You hooked a treasure chest!");
+            return result.ToString();
+        }
 
         if (FishSize == null)
         {
@@ -58,5 +73,37 @@ public class Expedition
         }
 
         return result.ToString();
+    }
+
+    public List<DiscordComponent> GetComponents()
+    {
+        return Event switch
+        {
+            Event.FoundTreasureChest =>
+            [
+                new DiscordComponent
+                {
+                    Type = DiscordMessageComponentType.ActionRow,
+                    Components =
+                    [
+                        new DiscordComponent
+                        {
+                            Type = DiscordMessageComponentType.Button,
+                            CustomId = $"open_{PromptId}",
+                            Label = "Open it!",
+                            Style = DiscordButtonStyleType.Success
+                        },
+                        new DiscordComponent
+                        {
+                            Type = DiscordMessageComponentType.Button,
+                            CustomId = $"close_{PromptId}",
+                            Label = "NO!",
+                            Style = DiscordButtonStyleType.Danger
+                        }
+                    ]
+                }
+            ],
+            _ => [],
+        };
     }
 }
