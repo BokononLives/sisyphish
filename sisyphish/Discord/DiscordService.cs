@@ -33,6 +33,8 @@ public class DiscordService : IDiscordService
 
         var success = false;
         var attempts = 0;
+        var responseErrorContent = string.Empty;
+
         while (!success && attempts < 5)
         {
             attempts++;
@@ -50,13 +52,21 @@ public class DiscordService : IDiscordService
             else
             {
                 httpClient.Dispose();
-                Thread.Sleep(1_000);
+
+                if (attempts == 5)
+                {
+                    responseErrorContent = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    Thread.Sleep(1_000);
+                }
             }
         }
 
         if (!success)
         {
-            _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)} - with: {content}");
+            _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)} - with: {content} - error: {responseErrorContent}");
         }
     }
 }
