@@ -23,7 +23,7 @@ public class DiscordService : IDiscordService
             value: body);
     }
 
-    public async Task EditResponse(DiscordInteraction interaction, string content, List<DiscordComponent> components)
+    public async Task EditResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
     {
         var body = new DiscordInteractionEdit
         {
@@ -33,6 +33,7 @@ public class DiscordService : IDiscordService
 
         var success = false;
         var attempts = 0;
+        var requestContent = string.Empty;
         var responseErrorContent = string.Empty;
 
         while (!success && attempts < 5)
@@ -55,6 +56,7 @@ public class DiscordService : IDiscordService
 
                 if (attempts == 5)
                 {
+                    requestContent = await response.RequestMessage!.Content!.ReadAsStringAsync();
                     responseErrorContent = await response.Content.ReadAsStringAsync();
                 }
                 else
@@ -66,7 +68,10 @@ public class DiscordService : IDiscordService
 
         if (!success)
         {
-            _logger.LogError($"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)} - with: {content} - error: {responseErrorContent}");
+            _logger.LogError(@$"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)}
+                - with: {content}
+                - error: {responseErrorContent}
+                - request: {requestContent}".Replace(Environment.NewLine, " "));
         }
     }
 }
