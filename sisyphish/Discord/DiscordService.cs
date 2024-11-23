@@ -60,7 +60,7 @@ public class DiscordService : IDiscordService
 
         await SendResponse(async (httpClient) =>
         {
-            return await httpClient.PatchAsJsonAsync(
+            return await httpClient.PostAsJsonAsync(
                 requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}",
                 value: body,
                 options: _jsonOptions.Value.JsonSerializerOptions
