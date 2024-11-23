@@ -33,11 +33,29 @@ public class SisyphishController : ControllerBase
 
         await UpdateFisher(interaction, fisher, expedition);
         await UpdateDiscord(interaction, initFisherResult, expedition);
-              
+        
         await UnlockFisher(fisher);
 
         return Ok();
     }
+
+    // [HttpPost("sisyphish/event")]
+    // [GoogleCloud]
+    // public async Task<IActionResult> ProcessEvent(DiscordInteraction interaction)
+    // {
+    //     var initPromptResult = await InitPrompt(interaction);
+    //     var prompt = initPromptResult?.Prompt;
+
+    //     //TODO:
+    //     /*
+    //      * do we want to / can we send the button as an ephemeral follow up to the original message?
+    //      * if so:
+    //      *      what should the original message say?
+    //      * if not:
+    //      *      can we have the button safely "do nothing" if the wrong user clicks it?
+    //      *      let's edit the message when the prompt resolves?
+    //      */   
+    // }
 
     [HttpPost("sisyphish/reset")]
     [GoogleCloud]
@@ -91,6 +109,46 @@ public class SisyphishController : ControllerBase
         }
     }
 
+    private async Task<InitPromptResult?> InitPrompt(DiscordInteraction interaction)
+    {
+        try
+        {
+            var result = new InitPromptResult();
+
+            var prompt = await GetPrompt(interaction);
+            result.Prompt = prompt;
+
+            if (prompt == null)
+            {
+                _logger.LogWarning($"Prompt was unexpectedly null - {interaction.Data?.CustomId}");
+            }
+            else if (prompt.IsLocked)
+            {
+                _logger.LogInformation($"Prompt was locked - {interaction.PromptId}");
+            }
+            else
+            {
+                try
+                {
+                    await LockPrompt(prompt);
+                    result.InitSuccess = true;
+                }
+                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
+                {
+                    _logger.LogInformation($"Failed to lock prompt - {interaction.PromptId}");
+                }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error initializing prompt");
+
+            return new InitPromptResult();
+        }
+    }
+
     private async Task<Fisher?> GetFisher(DiscordInteraction interaction)
     {
         var documents = await _firestoreDb.Collection("fishers")
@@ -129,6 +187,31 @@ public class SisyphishController : ControllerBase
         return fisher;
     }
 
+    private async Task<Prompt?> GetPrompt(DiscordInteraction interaction)
+    {
+        if (string.IsNullOrWhiteSpace(interaction.PromptId))
+        {
+            return null;
+        }
+
+        var documents = await _firestoreDb.Collection("prompts")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .WhereEqualTo("discord_prompt_id", interaction.PromptId)
+            .Limit(1)
+            .GetSnapshotAsync();
+
+        var document = documents.SingleOrDefault();
+        if (document == null)
+        {
+            return null;
+        }
+
+        var prompt = document.ConvertTo<Prompt>();
+        prompt.Id = document.Id;
+        prompt.LastUpdated = document.UpdateTime?.ToDateTime();
+        return prompt;
+    }
+
     private async Task CreatePrompt(DiscordInteraction interaction, Expedition expedition)
     {
         var prompt = new Prompt
@@ -147,6 +230,13 @@ public class SisyphishController : ControllerBase
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
             .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(fisher.LastUpdated!.Value)));
+    }
+
+    private async Task LockPrompt(Prompt prompt)
+    {
+        await _firestoreDb.Collection("prompts")
+            .Document(prompt.Id)
+            .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(prompt.LastUpdated!.Value)));
     }
 
     private async Task UnlockFisher(Fisher? fisher)

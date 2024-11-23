@@ -33,6 +33,7 @@ public class HomeController : ControllerBase
         {
             DiscordInteractionType.Ping => Pong(),
             DiscordInteractionType.ApplicationCommand => await ProcessApplicationCommand(interaction),
+            //DiscordInteractionType.MessageComponent => await ProcessMessageComponent(interaction),
             null => new DiscordInteractionErrorResponse { Error = "Interaction type is required" },
             _ => new DiscordInteractionErrorResponse { Error = "Invalid interaction type" },
         };
@@ -54,6 +55,17 @@ public class HomeController : ControllerBase
             _ => new DiscordInteractionErrorResponse { Error = "Invalid command name" },
         };
     }
+
+    // private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
+    // {
+    //     var response = new DeferredDiscordInteractionResponse();
+        
+    //     await _discord.DeferResponse(interaction);
+            
+    //     await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
+
+    //     return response;
+    // }
 
     private async Task<IDiscordInteractionResponse> ProcessFishCommand(DiscordInteraction interaction)
     {
