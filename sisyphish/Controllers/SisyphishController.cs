@@ -372,10 +372,12 @@ public class SisyphishController : ControllerBase
     {
         try
         {
+            await _discord.EditResponse(interaction, "This is a test!", []);
+
             var content = GetDiscordContent(initFisherResult, expedition);
             var components = GetDiscordComponents(initFisherResult, expedition);
 
-            await _discord.EditResponse(interaction, content!, components);
+            await _discord.SendFollowupResponse(interaction, content!, components);
         }
         catch (Exception ex)
         {
