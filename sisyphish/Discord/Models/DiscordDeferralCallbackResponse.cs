@@ -13,7 +13,7 @@ public class DiscordDeferralCallbackResponse
             return IsEphemeral
                 ? new DiscordInteractionResponseData
                 {
-                    Flags = [DiscordInteractionResponseFlags.Ephemeral]
+                    Flags = DiscordInteractionResponseFlags.Ephemeral
                 }
                 : null;
         }
