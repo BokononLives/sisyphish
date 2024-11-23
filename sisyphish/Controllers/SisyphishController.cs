@@ -372,12 +372,19 @@ public class SisyphishController : ControllerBase
     {
         try
         {
-            await _discord.EditResponse(interaction, "This is a test!", []);
-
             var content = GetDiscordContent(initFisherResult, expedition);
             var components = GetDiscordComponents(initFisherResult, expedition);
 
-            await _discord.SendFollowupResponse(interaction, content!, components);
+            var messageShouldBeEphemeral = components.Any();
+            if (messageShouldBeEphemeral)
+            {
+                await _discord.EditResponse(interaction, content!, components);
+            }
+            else
+            {
+                await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
+                await _discord.SendFollowupResponse(interaction, content!, components);
+            }
         }
         catch (Exception ex)
         {
