@@ -11,11 +11,11 @@ public class DiscordDeferralCallbackResponse
         get
         {
             return IsEphemeral
-                ? null
-                : new DiscordInteractionResponseData
+                ? new DiscordInteractionResponseData
                 {
                     Flags = [DiscordInteractionResponseFlags.Ephemeral]
-                };
+                }
+                : null;
         }
     }
 }
