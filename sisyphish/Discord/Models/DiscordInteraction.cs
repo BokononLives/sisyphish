@@ -11,4 +11,6 @@ public class DiscordInteraction
     public string? Token { get; set; }
 
     public string? UserId => Context == DiscordInteractionContext.Guild ? Member?.User?.Id : User?.Id;
+    public string? PromptId => Data?.CustomId?.Split('_').LastOrDefault();
+    public string? PromptResponse => Data?.CustomId?.Split('_').FirstOrDefault();
 }
