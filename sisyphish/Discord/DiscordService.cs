@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using sisyphish.Discord.Models;
@@ -17,15 +16,20 @@ public class DiscordService : IDiscordService
         _jsonOptions = jsonOptions;
     }
 
-    public async Task DeferResponse(DiscordInteraction interaction)
+    public async Task DeferResponse(DiscordInteraction interaction, bool isEphemeral)
     {
-        var body = new DiscordDeferralCallbackResponse();
+        var body = new DiscordDeferralCallbackResponse
+        {
+            IsEphemeral = isEphemeral
+        };
 
-        using var httpClient = new HttpClient();
-        await httpClient.PostAsJsonAsync(
-            requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
-            value: body,
-            options: _jsonOptions.Value.JsonSerializerOptions);
+        await SendResponse(async (httpClient) =>
+        {
+            return await httpClient.PostAsJsonAsync(
+                requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
+                value: body,
+                options: _jsonOptions.Value.JsonSerializerOptions);
+        });
     }
 
     public async Task EditResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
@@ -36,6 +40,36 @@ public class DiscordService : IDiscordService
             Components = components
         };
 
+        await SendResponse(async (httpClient) =>
+        {
+            return await httpClient.PatchAsJsonAsync(
+                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
+                value: body,
+                options: _jsonOptions.Value.JsonSerializerOptions
+            );
+        });
+    }
+
+    public async Task SendFollowupResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
+    {
+        var body = new DiscordInteractionEdit
+        {
+            Content = content,
+            Components = components
+        };
+
+        await SendResponse(async (httpClient) =>
+        {
+            return await httpClient.PatchAsJsonAsync(
+                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}",
+                value: body,
+                options: _jsonOptions.Value.JsonSerializerOptions
+            );
+        });
+    }
+
+    private async Task SendResponse(Func<HttpClient, Task<HttpResponseMessage>> sendResponse)
+    {
         var success = false;
         var attempts = 0;
         var requestContent = string.Empty;
@@ -46,11 +80,7 @@ public class DiscordService : IDiscordService
             attempts++;
 
             using var httpClient = new HttpClient();
-            var response = await httpClient.PatchAsJsonAsync(
-                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
-                value: body,
-                options: _jsonOptions.Value.JsonSerializerOptions
-            );
+            var response = await sendResponse(httpClient);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -74,8 +104,7 @@ public class DiscordService : IDiscordService
 
         if (!success)
         {
-            _logger.LogError(@$"Failed to respond to interaction: {JsonSerializer.Serialize(interaction)}
-                - with: {content}
+            _logger.LogError(@$"Failed to respond to interaction:
                 - error: {responseErrorContent}
                 - request: {requestContent}".Replace(Environment.NewLine, " "));
         }
