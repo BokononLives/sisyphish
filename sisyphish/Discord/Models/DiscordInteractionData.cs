@@ -5,5 +5,5 @@ namespace sisyphish.Discord.Models;
 public class DiscordInteractionData
 {
     [JsonConverter(typeof(JsonStringEnumConverter))] public DiscordCommandName? Name { get; set; }
-    [JsonPropertyName("custom_id")] public string? CustomId { get; set; }
+    public string? CustomId { get; set; }
 }
