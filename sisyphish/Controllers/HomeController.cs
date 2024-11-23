@@ -71,7 +71,7 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
         
-        await _discord.DeferResponse(interaction, isEphemeral: true);
+        await _discord.DeferResponse(interaction, isEphemeral: false);
             
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
