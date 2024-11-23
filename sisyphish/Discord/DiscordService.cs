@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using sisyphish.Discord.Models;
 
@@ -25,7 +25,7 @@ public class DiscordService : IDiscordService
         await httpClient.PostAsJsonAsync(
             requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
             value: body,
-            options: _jsonOptions.Value.SerializerOptions);
+            options: _jsonOptions.Value.JsonSerializerOptions);
     }
 
     public async Task EditResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
@@ -49,7 +49,7 @@ public class DiscordService : IDiscordService
             var response = await httpClient.PatchAsJsonAsync(
                 requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
                 value: body,
-                options: _jsonOptions.Value.SerializerOptions
+                options: _jsonOptions.Value.JsonSerializerOptions
             );
 
             if (response.StatusCode == HttpStatusCode.OK)
