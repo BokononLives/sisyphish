@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using sisyphish.Discord.Models;
 
 namespace sisyphish.Discord;
@@ -7,10 +9,12 @@ namespace sisyphish.Discord;
 public class DiscordService : IDiscordService
 {
     private readonly ILogger<DiscordService> _logger;
+    private readonly IOptions<JsonOptions> _jsonOptions;
 
-    public DiscordService(ILogger<DiscordService> logger)
+    public DiscordService(ILogger<DiscordService> logger, IOptions<JsonOptions> jsonOptions)
     {
         _logger = logger;
+        _jsonOptions = jsonOptions;
     }
 
     public async Task DeferResponse(DiscordInteraction interaction)
@@ -20,7 +24,8 @@ public class DiscordService : IDiscordService
         using var httpClient = new HttpClient();
         await httpClient.PostAsJsonAsync(
             requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
-            value: body);
+            value: body,
+            options: _jsonOptions.Value.SerializerOptions);
     }
 
     public async Task EditResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
@@ -43,7 +48,8 @@ public class DiscordService : IDiscordService
             using var httpClient = new HttpClient();
             var response = await httpClient.PatchAsJsonAsync(
                 requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
-                value: body
+                value: body,
+                options: _jsonOptions.Value.SerializerOptions
             );
 
             if (response.StatusCode == HttpStatusCode.OK)
