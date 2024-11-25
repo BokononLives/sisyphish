@@ -383,7 +383,8 @@ public class SisyphishController : ControllerBase
             var content = GetDiscordContent(initFisherResult, expedition);
             var components = GetDiscordComponents(initFisherResult, expedition);
 
-            await _discord.DeleteResponse(interaction); //does this invalidate the followup response?
+            await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
+            await _discord.DeleteResponse(interaction);
 
             var isEphemeral = components.Any();
             //if (messageShouldBeEphemeral)
