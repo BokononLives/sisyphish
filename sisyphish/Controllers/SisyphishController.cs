@@ -384,7 +384,6 @@ public class SisyphishController : ControllerBase
             var components = GetDiscordComponents(initFisherResult, expedition);
 
             await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
-            await _discord.DeleteResponse(interaction);
 
             var isEphemeral = components.Any();
             //if (messageShouldBeEphemeral)
@@ -396,6 +395,8 @@ public class SisyphishController : ControllerBase
                 //await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
                 await _discord.SendFollowupResponse(interaction, content!, components, isEphemeral);
             //}
+            
+            await _discord.DeleteResponse(interaction);
         }
         catch (Exception ex)
         {
