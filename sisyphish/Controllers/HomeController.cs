@@ -56,16 +56,16 @@ public class HomeController : ControllerBase
         };
     }
 
-    // private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
-    // {
-    //     var response = new DeferredDiscordInteractionResponse();
+    private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
+    {
+        var response = new DeferredDiscordInteractionResponse();
         
-    //     await _discord.DeferResponse(interaction);
+        await _discord.DeferResponse(interaction, isEphemeral: true);
             
-    //     await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
+        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
 
-    //     return response;
-    // }
+        return response;
+    }
 
     private async Task<IDiscordInteractionResponse> ProcessFishCommand(DiscordInteraction interaction)
     {

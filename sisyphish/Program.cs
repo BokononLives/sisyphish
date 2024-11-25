@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Google.Cloud.Diagnostics.Common;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
 using sisyphish.Discord;
@@ -9,6 +10,9 @@ using sisyphish.GoogleCloud;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
+
+builder.Logging.ClearProviders();
+builder.Logging.AddGoogle();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
