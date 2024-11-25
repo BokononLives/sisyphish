@@ -39,23 +39,31 @@ public class SisyphishController : ControllerBase
         return Ok();
     }
 
-    // [HttpPost("sisyphish/event")]
-    // [GoogleCloud]
-    // public async Task<IActionResult> ProcessEvent(DiscordInteraction interaction)
-    // {
-    //     var initPromptResult = await InitPrompt(interaction);
-    //     var prompt = initPromptResult?.Prompt;
+    [HttpPost("sisyphish/event")]
+    [GoogleCloud]
+    public async Task<IActionResult> ProcessEvent(DiscordInteraction interaction)
+    {
+        throw new NotImplementedException();
 
-    //     //TODO:
-    //     /*
-    //      * do we want to / can we send the button as an ephemeral follow up to the original message?
-    //      * if so:
-    //      *      what should the original message say?
-    //      * if not:
-    //      *      can we have the button safely "do nothing" if the wrong user clicks it?
-    //      *      let's edit the message when the prompt resolves?
-    //      */   
-    // }
+        // var initPromptResult = await InitPrompt(interaction);
+        // var prompt = initPromptResult?.Prompt;
+
+        //TODO:
+
+        //NEW COMMENTS:
+        // save interaction id and token in prompts table so we can follow up?
+
+
+        //OLD COMMENTS:
+        /*
+         * do we want to / can we send the button as an ephemeral follow up to the original message?
+         * if so:
+         *      what should the original message say?
+         * if not:
+         *      can we have the button safely "do nothing" if the wrong user clicks it?
+         *      let's edit the message when the prompt resolves?
+         */   
+    }
 
     [HttpPost("sisyphish/reset")]
     [GoogleCloud]
@@ -375,16 +383,18 @@ public class SisyphishController : ControllerBase
             var content = GetDiscordContent(initFisherResult, expedition);
             var components = GetDiscordComponents(initFisherResult, expedition);
 
-            var messageShouldBeEphemeral = components.Any();
-            if (messageShouldBeEphemeral)
-            {
-                await _discord.EditResponse(interaction, content!, components);
-            }
-            else
-            {
-                await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
-                await _discord.SendFollowupResponse(interaction, content!, components);
-            }
+            await _discord.DeleteResponse(interaction); //does this invalidate the followup response?
+
+            var isEphemeral = components.Any();
+            //if (messageShouldBeEphemeral)
+            //{
+            //    await _discord.EditResponse(interaction, content!, components);
+            //}
+            //else
+            //{
+                //await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
+                await _discord.SendFollowupResponse(interaction, content!, components, isEphemeral);
+            //}
         }
         catch (Exception ex)
         {

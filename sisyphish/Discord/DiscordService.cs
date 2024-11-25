@@ -32,6 +32,16 @@ public class DiscordService : IDiscordService
         });
     }
 
+    public async Task DeleteResponse(DiscordInteraction interaction)
+    {
+        await SendResponse(async (httpClient) =>
+        {
+            return await httpClient.DeleteAsync(
+                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+            );
+        });
+    }
+
     public async Task EditResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
     {
         var body = new DiscordInteractionEdit
@@ -50,12 +60,13 @@ public class DiscordService : IDiscordService
         });
     }
 
-    public async Task SendFollowupResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components)
+    public async Task SendFollowupResponse(DiscordInteraction interaction, string? content, List<DiscordComponent> components, bool isEphemeral)
     {
         var body = new DiscordInteractionEdit
         {
             Content = content,
-            Components = components
+            Components = components,
+            Flags = isEphemeral ? DiscordInteractionResponseFlags.Ephemeral : null
         };
 
         await SendResponse(async (httpClient) =>
