@@ -29,7 +29,10 @@ public class SisyphishController : ControllerBase
         var initFisherResult = await InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
 
-        var expedition = initFisherResult?.InitSuccess == true ? GoFish(fisher) : null;
+        var expedition =
+              initFisherResult?.InitSuccess != true ? null
+            : interaction.IsLucky ? GetLucky(fisher)
+            : GoFish(fisher);
 
         await UpdateFisher(interaction, fisher, expedition);
         await UpdateDiscord(interaction, initFisherResult, expedition);
@@ -291,6 +294,19 @@ public class SisyphishController : ControllerBase
             await document.Reference.DeleteAsync();
         }
     }
+    
+    private static Expedition? GetLucky(Fisher? fisher)
+    {
+        var expedition = new Expedition
+        {
+            Event = Event.None,
+            FishSize = null,
+            CaughtFish = false
+        };
+
+        expedition.Event = Event.FoundTreasureChest;
+        return expedition;
+    }
 
     private static Expedition? GoFish(Fisher? fisher)
     {
@@ -305,13 +321,6 @@ public class SisyphishController : ControllerBase
             FishSize = null,
             CaughtFish = false
         };
-
-        var eventRoll = Random.Shared.Next(1, 21);
-        if (eventRoll == 20)
-        {
-            expedition.Event = Event.FoundTreasureChest;
-            return expedition;
-        }
 
         var biteRoll = Random.Shared.Next(1, 11);
         if (biteRoll <= 4)
@@ -380,23 +389,26 @@ public class SisyphishController : ControllerBase
     {
         try
         {
-            var content = GetDiscordContent(initFisherResult, expedition);
-            var components = GetDiscordComponents(initFisherResult, expedition);
-
-            await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
-
-            var isEphemeral = components.Any();
-            //if (messageShouldBeEphemeral)
-            //{
-            //    await _discord.EditResponse(interaction, content!, components);
-            //}
-            //else
-            //{
-                //await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
-                await _discord.SendFollowupResponse(interaction, content!, components, isEphemeral);
-            //}
             
-            await _discord.DeleteResponse(interaction);
+            if (initFisherResult?.Fisher == null)
+            {
+                await ServeError(interaction, "An unexpected error occurred, please try again later!");
+            }
+            else if (!initFisherResult.InitSuccess)
+            {
+                await ServeError(interaction, $"<@{initFisherResult.Fisher.DiscordUserId}>, you are sending messages too quickly, please try again in a moment!");
+            }
+            else if (expedition == null)
+            {
+                await ServeError(interaction, "An unexpected error occurred, please try again later!");
+            }
+            else
+            {
+                var content = expedition.GetContent(initFisherResult.Fisher);
+                var components = GetDiscordComponents(initFisherResult, expedition);
+
+                await _discord.EditResponse(interaction, content, components);
+            }
         }
         catch (Exception ex)
         {
@@ -404,25 +416,11 @@ public class SisyphishController : ControllerBase
         }
     }
 
-    private static string? GetDiscordContent(InitFisherResult? initFisherResult, Expedition? expedition)
+    private async Task ServeError(DiscordInteraction interaction, string errorMessage)
     {
-        if (initFisherResult?.Fisher == null)
-        {
-            return "An unexpected error occurred, please try again later!";
-        }
-
-        if (!initFisherResult.InitSuccess)
-        {
-            return $"<@{initFisherResult.Fisher.DiscordUserId}>, you are sending messages too quickly, please try again in a moment!";
-        }
-
-        if (expedition == null)
-        {
-            return "An unexpected error occurred, please try again later!";
-        }
-
-        var content = expedition.GetContent(initFisherResult.Fisher);
-        return content;
+        await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
+        await _discord.SendFollowupResponse(interaction, errorMessage, [], false);
+        await _discord.DeleteResponse(interaction);
     }
 
     private static List<DiscordComponent> GetDiscordComponents(InitFisherResult? initFisherResult, Expedition? expedition)

@@ -15,7 +15,7 @@ public class Expedition
     public bool? CaughtFish { get; set; }
     public string? PromptId { get; }
 
-    public string? GetContent(Fisher fisher)
+    public string GetContent(Fisher fisher)
     {
         var result = new StringBuilder();
         result.AppendLine($"You cast your line into the Sea of Possibilities...");
