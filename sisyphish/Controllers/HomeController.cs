@@ -69,6 +69,12 @@ public class HomeController : ControllerBase
 
     private async Task<IDiscordInteractionResponse> ProcessFishCommand(DiscordInteraction interaction)
     {
+        var eventRoll = Random.Shared.Next(1, 21);
+        if (eventRoll == 20)
+        {
+            interaction.IsLucky = true;
+        }
+        
         var response = new DeferredDiscordInteractionResponse();
         
         await _discord.DeferResponse(interaction, isEphemeral: true);
