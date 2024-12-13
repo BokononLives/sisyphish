@@ -420,17 +420,6 @@ public class SisyphishController : ControllerBase
         }
     }
 
-    private async Task UpdateDatabaseForEvent(DiscordInteraction? interaction, Fisher? fisher, Prompt? prompt, Item? item)
-    {
-        try
-        {
-            if (interaction == null || fisher == null || prompt == null || item == null)
-            {
-                return;
-            }
-        }
-    }
-
     private async Task UpdateDiscordForFishing(DiscordInteraction interaction, InitFisherResult? initFisherResult, Expedition? expedition)
     {
         try
