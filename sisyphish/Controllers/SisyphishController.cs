@@ -31,7 +31,7 @@ public class SisyphishController : ControllerBase
 
         var expedition =
               initFisherResult?.InitSuccess != true ? null
-            : interaction.IsLucky ? GetLucky(fisher)
+            : interaction.IsLucky == true ? GetLucky(fisher)
             : GoFish(fisher);
 
         await UpdateFisher(interaction, fisher, expedition);
@@ -389,7 +389,6 @@ public class SisyphishController : ControllerBase
     {
         try
         {
-            
             if (initFisherResult?.Fisher == null)
             {
                 await ServeError(interaction, "An unexpected error occurred, please try again later!");
