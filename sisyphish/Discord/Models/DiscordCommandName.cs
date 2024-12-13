@@ -3,5 +3,6 @@ namespace sisyphish.Discord.Models;
 public enum DiscordCommandName
 {
     Fish,
-    Reset
+    Reset,
+    Lucky
 }

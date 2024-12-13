@@ -52,6 +52,7 @@ public class HomeController : ControllerBase
         {
             DiscordCommandName.Fish => await ProcessFishCommand(interaction),
             DiscordCommandName.Reset => await ProcessResetCommand(interaction),
+            DiscordCommandName.Lucky => await ProcessLuckyCommand(interaction),
             _ => new DiscordInteractionErrorResponse { Error = "Invalid command name" },
         };
     }
@@ -91,6 +92,19 @@ public class HomeController : ControllerBase
         await _discord.DeferResponse(interaction, isEphemeral: false);
             
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
+
+        return response;
+    }
+
+    private async Task<IDiscordInteractionResponse> ProcessLuckyCommand(DiscordInteraction interaction)
+    {
+        interaction.IsLucky = true;
+        
+        var response = new DeferredDiscordInteractionResponse();
+        
+        await _discord.DeferResponse(interaction, isEphemeral: interaction.IsLucky == true);
+            
+        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
 
         return response;
     }

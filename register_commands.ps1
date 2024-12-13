@@ -12,6 +12,10 @@ $body = '[
     {
         "name": "reset",
         "description": "WIPE OUT ALL YOUR SISYPHISH DATA IRREVERSIBLY"
+    },
+    {
+        "name": "lucky",
+        "description": "force a lucky expedition"
     }
 ]'
 
