@@ -1,15 +1,19 @@
 using System.Text.Json;
 using Google.Cloud.Tasks.V2;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 
 namespace sisyphish.GoogleCloud;
 
 public class CloudTasksService : ICloudTasksService
 {
     private readonly CloudTasksClient _cloudTasks;
+    private readonly IOptions<JsonOptions> _jsonOptions;
 
-    public CloudTasksService(CloudTasksClient cloudTasks)
+    public CloudTasksService(CloudTasksClient cloudTasks, IOptions<JsonOptions> jsonOptions)
     {
         _cloudTasks = cloudTasks;
+        _jsonOptions = jsonOptions;
     }
 
     public async System.Threading.Tasks.Task CreateHttpPostTask(string url, object body)
@@ -23,7 +27,7 @@ public class CloudTasksService : ICloudTasksService
                 {
                     HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
                     Headers = {{ "Content-Type", "application/json" }},
-                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(JsonSerializer.Serialize(body)),
+                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(JsonSerializer.Serialize(body, _jsonOptions.Value.SerializerOptions)),
                     Url = url,
                     OidcToken = new OidcToken
                     {
