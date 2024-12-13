@@ -12,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
 builder.Logging.ClearProviders();
-builder.Logging.AddGoogle();
+builder.Logging.AddGoogle(new LoggingServiceOptions
+{
+    ProjectId = Config.GoogleProjectId,
+    Options = LoggingOptions.Create(logLevel: LogLevel.Debug)
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
