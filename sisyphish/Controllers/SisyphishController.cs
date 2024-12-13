@@ -27,8 +27,6 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
-        _logger.LogInformation(JsonSerializer.Serialize(interaction));
-
         var initFisherResult = await InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
 
