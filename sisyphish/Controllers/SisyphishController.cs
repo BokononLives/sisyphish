@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Google.Cloud.Firestore;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
@@ -35,8 +34,8 @@ public class SisyphishController : ControllerBase
             : interaction.IsLucky == true ? GetLucky(fisher)
             : GoFish(fisher);
 
-        await UpdateFisher(interaction, fisher, expedition);
-        await UpdateDiscord(interaction, initFisherResult, expedition);
+        await UpdateDatabaseForFishing(interaction, fisher, expedition);
+        await UpdateDiscordForFishing(interaction, initFisherResult, expedition);
         
         await UnlockFisher(fisher);
 
@@ -47,26 +46,37 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessEvent(DiscordInteraction interaction)
     {
-        throw new NotImplementedException();
+        var initFisherResult = await InitFisher(interaction);
+        var fisher = initFisherResult?.Fisher;
+        
+        var initPromptResult = await InitPrompt(interaction);
+        var prompt = initPromptResult?.Prompt;
 
-        // var initPromptResult = await InitPrompt(interaction);
-        // var prompt = initPromptResult?.Prompt;
+        if (fisher != null && prompt != null)
+        {
+            switch (prompt?.Event)
+            {
+                case Event.FoundTreasureChest:
+                    var item = interaction.PromptResponse == "open"
+                        ? (Item?)Random.Shared.GetItems(Enum.GetValues<Item>(), 1).Single()
+                        : null;
+                    
+                    if (item != null)
+                    {
+                        await AddItem(fisher, item.Value);
+                    }
+                    await DeletePrompt(interaction);
+                    await UpdateDiscordForEvent(interaction, initFisherResult, initPromptResult, item);
+                    
+                    break;
+                default:
+                    break;
+            }
+        }
 
-        //TODO:
+        await UnlockFisher(fisher);
 
-        //NEW COMMENTS:
-        // save interaction id and token in prompts table so we can follow up?
-
-
-        //OLD COMMENTS:
-        /*
-         * do we want to / can we send the button as an ephemeral follow up to the original message?
-         * if so:
-         *      what should the original message say?
-         * if not:
-         *      can we have the button safely "do nothing" if the wrong user clicks it?
-         *      let's edit the message when the prompt resolves?
-         */   
+        return Ok();
     }
 
     [HttpPost("sisyphish/reset")]
@@ -281,6 +291,13 @@ public class SisyphishController : ControllerBase
             });
     }
 
+    private async Task AddItem(Fisher fisher, Item item)
+    {
+        await _firestoreDb.Collection("fishers")
+            .Document(fisher.Id)
+            .UpdateAsync("items", FieldValue.ArrayUnion(item.ToString()));
+    }
+
     private async Task DeleteFisher(DiscordInteraction interaction)
     {
         var documents = await _firestoreDb.Collection("fishers")
@@ -288,6 +305,23 @@ public class SisyphishController : ControllerBase
             .Limit(1)
             .GetSnapshotAsync();
 
+        var document = documents.SingleOrDefault();
+
+        if (document != null)
+        {
+            await document.Reference.DeleteAsync();
+        }
+    }
+
+    private async Task DeletePrompt(DiscordInteraction interaction)
+    {
+
+        var documents = await _firestoreDb.Collection("prompts")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .WhereEqualTo("discord_prompt_id", interaction.PromptId)
+            .Limit(1)
+            .GetSnapshotAsync();
+        
         var document = documents.SingleOrDefault();
 
         if (document != null)
@@ -357,7 +391,7 @@ public class SisyphishController : ControllerBase
         return expedition;
     }
 
-    private async Task UpdateFisher(DiscordInteraction? interaction, Fisher? fisher, Expedition? expedition)
+    private async Task UpdateDatabaseForFishing(DiscordInteraction? interaction, Fisher? fisher, Expedition? expedition)
     {
         try
         {
@@ -386,7 +420,18 @@ public class SisyphishController : ControllerBase
         }
     }
 
-    private async Task UpdateDiscord(DiscordInteraction interaction, InitFisherResult? initFisherResult, Expedition? expedition)
+    private async Task UpdateDatabaseForEvent(DiscordInteraction? interaction, Fisher? fisher, Prompt? prompt, Item? item)
+    {
+        try
+        {
+            if (interaction == null || fisher == null || prompt == null || item == null)
+            {
+                return;
+            }
+        }
+    }
+
+    private async Task UpdateDiscordForFishing(DiscordInteraction interaction, InitFisherResult? initFisherResult, Expedition? expedition)
     {
         try
         {
@@ -408,6 +453,47 @@ public class SisyphishController : ControllerBase
                 var components = GetDiscordComponents(initFisherResult, expedition);
 
                 await _discord.EditResponse(interaction, content, components);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating Discord");
+        }
+    }
+
+    private async Task UpdateDiscordForEvent(DiscordInteraction interaction, InitFisherResult? initFisherResult, InitPromptResult? initPromptResult, Item? item)
+    {
+        try
+        {
+            if (initFisherResult?.Fisher == null)
+            {
+                await ServeError(interaction, "An unexpected error occurred, please try again later!");
+            }
+            else if (initPromptResult?.Prompt == null)
+            {
+                await ServeError(interaction, "An unexpected error occurred, please try again later!");
+            }
+            else if (!initFisherResult.InitSuccess)
+            {
+                await ServeError(interaction, $"<@{initFisherResult.Fisher.DiscordUserId}>, you are sending messages too quickly, please try again in a moment!");
+            }
+            else if (!initPromptResult.InitSuccess)
+            {
+                await ServeError(interaction, $"<@{initFisherResult.Fisher.DiscordUserId}>, you are sending messages too quickly, please try again in a moment!");
+            }
+            else if (item == null)
+            {
+                var content = $"You get nothing!";
+
+                await _discord.SendFollowupResponse(interaction, content, [], false);
+                await _discord.DeleteResponse(interaction);
+            }
+            else
+            {
+                var content = $"Inside the chest was: 1 {item}!";
+
+                await _discord.SendFollowupResponse(interaction, content, [], false);
+                await _discord.DeleteResponse(interaction);
             }
         }
         catch (Exception ex)

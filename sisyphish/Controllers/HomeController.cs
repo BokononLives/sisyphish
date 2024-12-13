@@ -33,7 +33,7 @@ public class HomeController : ControllerBase
         {
             DiscordInteractionType.Ping => Pong(),
             DiscordInteractionType.ApplicationCommand => await ProcessApplicationCommand(interaction),
-            //DiscordInteractionType.MessageComponent => await ProcessMessageComponent(interaction),
+            DiscordInteractionType.MessageComponent => await ProcessMessageComponent(interaction),
             null => new DiscordInteractionErrorResponse { Error = "Interaction type is required" },
             _ => new DiscordInteractionErrorResponse { Error = "Invalid interaction type" },
         };
@@ -61,8 +61,8 @@ public class HomeController : ControllerBase
     {
         var response = new DeferredDiscordInteractionResponse();
         
-        await _discord.DeferResponse(interaction, isEphemeral: true);
-            
+        await _discord.DeferResponse(interaction, isEphemeral: false);
+        
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
 
         return response;
@@ -79,9 +79,9 @@ public class HomeController : ControllerBase
         var response = new DeferredDiscordInteractionResponse();
         
         await _discord.DeferResponse(interaction, isEphemeral: interaction.IsLucky == true);
-            
+        
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
-
+        
         return response;
     }
 
