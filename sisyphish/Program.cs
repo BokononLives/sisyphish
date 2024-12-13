@@ -11,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
-builder.Logging.ClearProviders();
 builder.Logging.AddGoogle(new LoggingServiceOptions
 {
     ProjectId = Config.GoogleProjectId,
