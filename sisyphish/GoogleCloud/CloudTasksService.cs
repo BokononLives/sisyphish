@@ -22,7 +22,7 @@ public class CloudTasksService : ICloudTasksService
     {
         var serializedBody = JsonSerializer.Serialize(body, _jsonOptions.Value.SerializerOptions);
 
-        _logger.LogInformation(serializedBody);
+        _logger.LogInformation($"Raw outgoing payload: {serializedBody}");
 
         var createTaskRequest = new CreateTaskRequest
         {
