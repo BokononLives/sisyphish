@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using Google.Cloud.Diagnostics.Common;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
-using Microsoft.AspNetCore.Http.Json;
 using sisyphish.Discord;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud;
@@ -29,11 +28,6 @@ builder.Services.AddControllers()
     {
         setUpJsonSerializerOptions(options.JsonSerializerOptions);
     });
-
-builder.Services.Configure<JsonOptions>(options =>
-{
-    setUpJsonSerializerOptions(options.SerializerOptions);
-});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

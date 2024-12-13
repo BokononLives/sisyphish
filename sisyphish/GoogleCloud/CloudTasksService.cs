@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Google.Cloud.Tasks.V2;
-using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace sisyphish.GoogleCloud;
@@ -9,20 +9,16 @@ public class CloudTasksService : ICloudTasksService
 {
     private readonly CloudTasksClient _cloudTasks;
     private readonly IOptions<JsonOptions> _jsonOptions;
-    private readonly ILogger<CloudTasksService> _logger;
 
-    public CloudTasksService(CloudTasksClient cloudTasks, IOptions<JsonOptions> jsonOptions, ILogger<CloudTasksService> logger)
+    public CloudTasksService(CloudTasksClient cloudTasks, IOptions<JsonOptions> jsonOptions)
     {
         _cloudTasks = cloudTasks;
         _jsonOptions = jsonOptions;
-        _logger = logger;
     }
 
     public async System.Threading.Tasks.Task CreateHttpPostTask(string url, object body)
     {
-        var serializedBody = JsonSerializer.Serialize(body, _jsonOptions.Value.SerializerOptions);
-
-        _logger.LogInformation($"Raw outgoing payload: {serializedBody}");
+        var serializedBody = JsonSerializer.Serialize(body, _jsonOptions.Value.JsonSerializerOptions);
 
         var createTaskRequest = new CreateTaskRequest
         {
