@@ -474,15 +474,13 @@ public class SisyphishController : ControllerBase
             {
                 var content = $"You get nothing!";
 
-                await _discord.SendFollowupResponse(interaction, content, [], false);
-                await _discord.DeleteResponse(interaction);
+                await _discord.EditResponse(interaction, content, []);
             }
             else
             {
                 var content = $"Inside the chest was: 1 {item}!";
 
-                await _discord.SendFollowupResponse(interaction, content, [], false);
-                await _discord.DeleteResponse(interaction);
+                await _discord.EditResponse(interaction, content, []);
             }
         }
         catch (Exception ex)
