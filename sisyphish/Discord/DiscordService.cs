@@ -85,7 +85,7 @@ public class DiscordService : IDiscordService
     {
         var success = false;
         var attempts = 0;
-        var requestContent = (string?)null);
+        var requestContent = (string?)null;
         var responseErrorContent = string.Empty;
 
         while (!success && attempts < 5)
