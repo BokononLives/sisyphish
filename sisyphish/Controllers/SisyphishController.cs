@@ -75,7 +75,7 @@ public class SisyphishController : ControllerBase
         }
         else
         {
-            await _discord.DeleteResponse(interaction, interaction.Message?.Id);
+            await _discord.DeleteResponse(interaction);
         }
 
         await UnlockFisher(fisher);
