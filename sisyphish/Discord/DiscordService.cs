@@ -85,7 +85,7 @@ public class DiscordService : IDiscordService
     {
         var success = false;
         var attempts = 0;
-        var requestContent = string.Empty;
+        var requestContent = (string?)null);
         var responseErrorContent = string.Empty;
 
         while (!success && attempts < 5)
@@ -105,8 +105,8 @@ public class DiscordService : IDiscordService
 
                 if (attempts == 5)
                 {
-                    requestContent = await response.RequestMessage!.Content!.ReadAsStringAsync();
-                    responseErrorContent = await response.Content.ReadAsStringAsync();
+                    requestContent = await ((response.RequestMessage?.Content?.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
+                    responseErrorContent = await ((response.Content.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
                 }
                 else
                 {
