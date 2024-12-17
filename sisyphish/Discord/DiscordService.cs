@@ -32,12 +32,14 @@ public class DiscordService : IDiscordService
         });
     }
 
-    public async Task DeleteResponse(DiscordInteraction interaction)
+    public async Task DeleteResponse(DiscordInteraction interaction, string? messageId = null)
     {
+        var messageToDelete = string.IsNullOrWhiteSpace(messageId) ? "@original" : messageId;
+
         await SendResponse(async (httpClient) =>
         {
             return await httpClient.DeleteAsync(
-                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original"
+                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/{messageToDelete}"
             );
         });
     }

@@ -8,6 +8,7 @@ public class DiscordInteraction
     public DiscordInteractionContext? Context { get; set; }
     public DiscordInteractionMember? Member { get; set; }
     public DiscordInteractionUser? User { get; set; }
+    public DiscordInteractionMessage? Message { get; set; }
     public string? Token { get; set; }
 
     public string? UserId => Context == DiscordInteractionContext.Guild ? Member?.User?.Id : User?.Id;
