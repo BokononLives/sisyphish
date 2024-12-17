@@ -52,7 +52,7 @@ public class SisyphishController : ControllerBase
         var initPromptResult = await InitPrompt(interaction);
         var prompt = initPromptResult?.Prompt;
 
-        if (fisher != null && prompt != null)
+        if (fisher != null && prompt != null && initFisherResult?.InitSuccess == true && initPromptResult?.InitSuccess == true)
         {
             switch (prompt?.Event)
             {
@@ -72,6 +72,10 @@ public class SisyphishController : ControllerBase
                 default:
                     break;
             }
+        }
+        else
+        {
+            await _discord.DeleteResponse(interaction, interaction.Message?.Id);
         }
 
         await UnlockFisher(fisher);
