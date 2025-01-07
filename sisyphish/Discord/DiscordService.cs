@@ -87,6 +87,7 @@ public class DiscordService : IDiscordService
         var attempts = 0;
         var requestContent = (string?)null;
         var responseErrorContent = string.Empty;
+        var responseStatusCode = string.Empty;
 
         while (!success && attempts < 5)
         {
@@ -105,10 +106,12 @@ public class DiscordService : IDiscordService
 
                 requestContent = await ((response.RequestMessage?.Content?.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
                 responseErrorContent = await ((response.Content.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
+                responseStatusCode = response.StatusCode.ToString();
 
                 if (attempts < 5)
                 {
                     _logger.LogError(@$"Failed to respond to interaction - trying again:
+                        - status code: {responseStatusCode}
                         - error: {responseErrorContent}
                         - request: {requestContent}".Replace(Environment.NewLine, " "));
                         
@@ -120,6 +123,7 @@ public class DiscordService : IDiscordService
         if (!success)
         {
             _logger.LogError(@$"Failed to respond to interaction - giving up:
+                - status code: {responseStatusCode}
                 - error: {responseErrorContent}
                 - request: {requestContent}".Replace(Environment.NewLine, " "));
         }
