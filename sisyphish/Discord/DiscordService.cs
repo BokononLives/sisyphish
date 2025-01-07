@@ -96,7 +96,7 @@ public class DiscordService : IDiscordService
             using var httpClient = new HttpClient();
             var response = await sendResponse(httpClient);
 
-            if (response.StatusCode == HttpStatusCode.OK)
+            if (response.IsSuccessStatusCode)
             {
                 success = true;
             }
