@@ -59,9 +59,23 @@ public class HomeController : ControllerBase
 
     private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
     {
+        if (interaction.UserId != interaction.PromptUserId)
+        {
+            return new DiscordInteractionResponse
+            {
+                ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
+                Data = new DiscordInteractionResponseData
+                {
+                    Flags = DiscordInteractionResponseFlags.Ephemeral,
+                    Content = "An unexpected error occurred, please try again later!"
+                }
+            };
+        }
+
         var response = new DeferredDiscordInteractionResponse();
         
         await _discord.DeferResponse(interaction, isEphemeral: false);
+        await _discord.DeleteResponse(interaction, interaction.Message?.Id);
         
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
 
