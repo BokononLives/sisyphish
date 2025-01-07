@@ -59,7 +59,7 @@ public class HomeController : ControllerBase
 
     private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
     {
-        if (interaction.UserId != interaction.PromptUserId)
+        if (/*interaction.UserId != interaction.PromptUserId*/ 1 == 1)
         {
             return new DiscordInteractionResponse
             {
