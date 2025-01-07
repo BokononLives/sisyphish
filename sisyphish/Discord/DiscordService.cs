@@ -103,13 +103,15 @@ public class DiscordService : IDiscordService
             {
                 httpClient.Dispose();
 
-                if (attempts == 5)
+                requestContent = await ((response.RequestMessage?.Content?.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
+                responseErrorContent = await ((response.Content.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
+
+                if (attempts < 5)
                 {
-                    requestContent = await ((response.RequestMessage?.Content?.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
-                    responseErrorContent = await ((response.Content.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
-                }
-                else
-                {
+                    _logger.LogError(@$"Failed to respond to interaction - trying again:
+                        - error: {responseErrorContent}
+                        - request: {requestContent}".Replace(Environment.NewLine, " "));
+                        
                     Thread.Sleep(1_000);
                 }
             }
@@ -117,7 +119,7 @@ public class DiscordService : IDiscordService
 
         if (!success)
         {
-            _logger.LogError(@$"Failed to respond to interaction:
+            _logger.LogError(@$"Failed to respond to interaction - giving up:
                 - error: {responseErrorContent}
                 - request: {requestContent}".Replace(Environment.NewLine, " "));
         }
