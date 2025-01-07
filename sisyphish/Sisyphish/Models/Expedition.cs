@@ -5,8 +5,11 @@ namespace sisyphish.Sisyphish.Models;
 
 public class Expedition
 {
-    public Expedition()
+    private string? _userId;
+
+    public Expedition(string? userId)
     {
+        _userId = userId;
         PromptId = Guid.NewGuid().ToString();
     }
 
@@ -89,14 +92,14 @@ public class Expedition
                         new DiscordComponent
                         {
                             Type = DiscordMessageComponentType.Button,
-                            CustomId = $"open_{PromptId}",
+                            CustomId = $"open_{_userId}_{PromptId}",
                             Label = "Open it!",
                             Style = DiscordButtonStyleType.Success
                         },
                         new DiscordComponent
                         {
                             Type = DiscordMessageComponentType.Button,
-                            CustomId = $"close_{PromptId}",
+                            CustomId = $"close_{_userId}_{PromptId}",
                             Label = "NO!",
                             Style = DiscordButtonStyleType.Danger
                         }

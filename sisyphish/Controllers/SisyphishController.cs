@@ -336,7 +336,7 @@ public class SisyphishController : ControllerBase
     
     private static Expedition? GetLucky(Fisher? fisher)
     {
-        var expedition = new Expedition
+        var expedition = new Expedition(fisher?.DiscordUserId)
         {
             Event = Event.None,
             FishSize = null,
@@ -354,7 +354,7 @@ public class SisyphishController : ControllerBase
             return null;
         }
 
-        var expedition = new Expedition
+        var expedition = new Expedition(fisher?.DiscordUserId)
         {
             Event = Event.None,
             FishSize = null,
