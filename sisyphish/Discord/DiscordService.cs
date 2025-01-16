@@ -102,21 +102,30 @@ public class DiscordService : IDiscordService
             }
             else
             {
+                var shouldRetry = response.StatusCode == HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500;
+
+                var retryAfter =
+                    shouldRetry
+                        ? response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(1)
+                        : TimeSpan.FromSeconds(0);
+                
                 httpClient.Dispose();
 
                 requestContent = await ((response.RequestMessage?.Content?.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
                 responseErrorContent = await ((response.Content.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
                 responseStatusCode = response.StatusCode.ToString();
 
-                if (attempts < 5)
+                if (attempts >= 5 || !shouldRetry)
                 {
-                    _logger.LogError(@$"Failed to respond to interaction - trying again:
-                        - status code: {responseStatusCode}
-                        - error: {responseErrorContent}
-                        - request: {requestContent}".Replace(Environment.NewLine, " "));
-                        
-                    Thread.Sleep(1_000);
+                    break;
                 }
+
+                _logger.LogError(@$"Failed to respond to interaction - trying again:
+                    - status code: {responseStatusCode}
+                    - error: {responseErrorContent}
+                    - request: {requestContent}".Replace(Environment.NewLine, " "));
+                    
+                Thread.Sleep(retryAfter);
             }
         }
 
