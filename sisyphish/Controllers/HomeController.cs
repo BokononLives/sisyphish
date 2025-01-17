@@ -65,7 +65,7 @@ public class HomeController : ControllerBase
 
     private async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction, List<ICommandProcessor> processors)
     {
-        if (processors.Count != 0)
+        if (processors.Count != 1)
         {
             return new DiscordInteractionErrorResponse { Error = "An unexpected error occurred, please try again later!" };
         }
