@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Google.Cloud.Diagnostics.Common;
@@ -6,6 +7,7 @@ using Google.Cloud.Tasks.V2;
 using sisyphish.Discord;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud;
+using sisyphish.Sisyphish.Processors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +38,16 @@ builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Buil
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordAttribute>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
+
+var commandProcessors = Assembly.GetAssembly(typeof(ICommandProcessor))?
+    .GetTypes()
+    .Where(type => typeof(ICommandProcessor).IsAssignableFrom(type) && !type.IsInterface)
+    .ToList() ?? [];
+
+foreach (var commandProcessorType in commandProcessors)
+{
+    builder.Services.AddScoped(typeof(ICommandProcessor), commandProcessorType);
+}
 
 var app = builder.Build();
 
