@@ -1,22 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
 using sisyphish.Filters;
-using sisyphish.GoogleCloud;
+using sisyphish.Sisyphish.Processors;
 
 namespace sisyphish.Controllers;
 
 [ApiController]
 public class HomeController : ControllerBase
 {
-    private readonly ICloudTasksService _cloudTasks;
-    private readonly IDiscordService _discord;
+    private readonly IEnumerable<ICommandProcessor> _commandProcessors;
 
-    public HomeController(ICloudTasksService cloudTasks, IDiscordService discord)
+    public HomeController(IEnumerable<ICommandProcessor> commandProcessors)
     {
-        _cloudTasks = cloudTasks;
-        _discord = discord;
+        _commandProcessors = commandProcessors;
     }
 
     [HttpGet("")]
@@ -48,78 +45,34 @@ public class HomeController : ControllerBase
 
     private async Task<IDiscordInteractionResponse> ProcessApplicationCommand(DiscordInteraction interaction)
     {
-        return (interaction.Data?.Name) switch
-        {
-            DiscordCommandName.Fish => await ProcessFishCommand(interaction),
-            DiscordCommandName.Reset => await ProcessResetCommand(interaction),
-            //DiscordCommandName.Lucky => await ProcessLuckyCommand(interaction),
-            _ => new DiscordInteractionErrorResponse { Error = "Invalid command name" },
-        };
+        var commandProcessors = _commandProcessors
+            .Where(p => p.Command == interaction.Data?.Name)
+            .ToList();
+        
+        var result = await ProcessInitialCommand(interaction, commandProcessors);
+        return result;
     }
 
     private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
     {
-        if (interaction.UserId != interaction.PromptUserId)
+        var commandProcessors = _commandProcessors
+            .OfType<MessageComponentCommandProcessor>()
+            .ToList<ICommandProcessor>();
+        
+        var result = await ProcessInitialCommand(interaction, commandProcessors);
+        return result;
+    }
+
+    private async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction, List<ICommandProcessor> processors)
+    {
+        if (processors.Count != 0)
         {
-            return new DiscordInteractionResponse
-            {
-                ContentType = DiscordInteractionResponseContentType.ChannelMessageWithSource,
-                Data = new DiscordInteractionResponseData
-                {
-                    Flags = DiscordInteractionResponseFlags.Ephemeral,
-                    Content = "An unexpected error occurred, please try again later!"
-                }
-            };
+            return new DiscordInteractionErrorResponse { Error = "An unexpected error occurred, please try again later!" };
         }
 
-        var response = new DeferredDiscordInteractionResponse();
-        
-        await _discord.DeferResponse(interaction, isEphemeral: false);
-        await _discord.DeleteResponse(interaction, interaction.Message?.Id);
-        
-        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
+        var commandProcessor = processors.Single();
 
-        return response;
+        var result = await commandProcessor.ProcessInitialCommand(interaction);
+        return result;
     }
-
-    private async Task<IDiscordInteractionResponse> ProcessFishCommand(DiscordInteraction interaction)
-    {
-        var eventRoll = Random.Shared.Next(1, 21);
-        if (eventRoll == 20)
-        {
-            interaction.IsLucky = true;
-        }
-        
-        var response = new DeferredDiscordInteractionResponse();
-        
-        await _discord.DeferResponse(interaction, isEphemeral: interaction.IsLucky == true);
-        
-        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
-        
-        return response;
-    }
-
-    private async Task<IDiscordInteractionResponse> ProcessResetCommand(DiscordInteraction interaction)
-    {
-        var response = new DeferredDiscordInteractionResponse();
-        
-        await _discord.DeferResponse(interaction, isEphemeral: false);
-            
-        await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
-
-        return response;
-    }
-
-    // private async Task<IDiscordInteractionResponse> ProcessLuckyCommand(DiscordInteraction interaction)
-    // {
-    //     interaction.IsLucky = true;
-        
-    //     var response = new DeferredDiscordInteractionResponse();
-        
-    //     await _discord.DeferResponse(interaction, isEphemeral: interaction.IsLucky == true);
-            
-    //     await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
-
-    //     return response;
-    // }
 }
