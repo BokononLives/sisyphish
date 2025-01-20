@@ -31,7 +31,7 @@ public class FirestoreDbFisherService : IFisherService
         }
     }
 
-    private async Task<InitFisherResult?> InitFisher(DiscordInteraction interaction)
+    public async Task<InitFisherResult?> InitFisher(DiscordInteraction interaction)
     {
         try
         {

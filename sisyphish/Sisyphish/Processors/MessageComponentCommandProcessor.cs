@@ -39,4 +39,9 @@ public class MessageComponentCommandProcessor : ICommandProcessor
         var response = new DeferredDiscordInteractionResponse();
         return response;
     }
+
+    public Task ProcessFollowUpToCommand(DiscordInteraction interaction)
+    {
+        throw new NotImplementedException();
+    }
 }
