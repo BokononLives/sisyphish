@@ -1,6 +1,7 @@
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud;
+using sisyphish.Sisyphish.Services;
 
 namespace sisyphish.Sisyphish.Processors;
 
@@ -8,11 +9,13 @@ public class ResetCommandProcessor : ICommandProcessor
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
+    private readonly IFisherService _fisherService;
 
-    public ResetCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord)
+    public ResetCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IFisherService fisherService)
     {
         _cloudTasks = cloudTasks;
         _discord = discord;
+        _fisherService = fisherService;
     }
 
     public DiscordCommandName? Command => DiscordCommandName.Reset;
@@ -24,5 +27,13 @@ public class ResetCommandProcessor : ICommandProcessor
         
         var response = new DeferredDiscordInteractionResponse();
         return response;
+    }
+
+    public async Task ProcessFollowUpToCommand(DiscordInteraction interaction)
+    {
+        var content = $"Bye, <@{interaction.UserId}>!";
+
+        await _fisherService.DeleteFisher(interaction);
+        await _discord.EditResponse(interaction, content, []);
     }
 }

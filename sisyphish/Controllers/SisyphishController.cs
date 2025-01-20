@@ -5,6 +5,7 @@ using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.Filters;
 using sisyphish.Sisyphish.Models;
+using sisyphish.Sisyphish.Processors;
 
 namespace sisyphish.Controllers;
 
@@ -14,30 +15,25 @@ public class SisyphishController : ControllerBase
     private readonly FirestoreDb _firestoreDb;
     private readonly IDiscordService _discord;
     private readonly ILogger<SisyphishController> _logger;
+    private readonly IEnumerable<ICommandProcessor> _commandProcessors;
 
-    public SisyphishController(FirestoreDb firestoreDb, IDiscordService discord, ILogger<SisyphishController> logger)
+    public SisyphishController(FirestoreDb firestoreDb, IDiscordService discord, ILogger<SisyphishController> logger, IEnumerable<ICommandProcessor> commandProcessors)
     {
         _firestoreDb = firestoreDb;
         _discord = discord;
         _logger = logger;
+        _commandProcessors = commandProcessors;
     }
 
     [HttpPost("sisyphish/fish")]
     [GoogleCloud]
     public async Task<IActionResult> ProcessFishCommand(DiscordInteraction interaction)
     {
-        var initFisherResult = await InitFisher(interaction);
-        var fisher = initFisherResult?.Fisher;
-
-        var expedition =
-              initFisherResult?.InitSuccess != true ? null
-            : interaction.IsLucky == true ? GetLucky(fisher)
-            : GoFish(fisher);
-
-        await UpdateDatabaseForFishing(interaction, fisher, expedition);
-        await UpdateDiscordForFishing(interaction, initFisherResult, expedition);
+        var commandProcessors = _commandProcessors
+            .Where(p => p.Command == DiscordCommandName.Fish)
+            .ToList();
         
-        await UnlockFisher(fisher);
+        await ProcessFollowUpToCommand(interaction, commandProcessors);
 
         return Ok();
     }
@@ -87,12 +83,25 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessResetCommand(DiscordInteraction interaction)
     {
-        await DeleteFisher(interaction);
+        var commandProcessors = _commandProcessors
+            .OfType<MessageComponentCommandProcessor>()
+            .ToList<ICommandProcessor>();
         
-        var content = $"Bye, <@{interaction.UserId}>!";
-        await _discord.EditResponse(interaction, content, []);
+        await ProcessFollowUpToCommand(interaction, commandProcessors);
         
         return Ok();
+    }
+
+    private async Task ProcessFollowUpToCommand(DiscordInteraction interaction, List<ICommandProcessor> processors)
+    {
+        if (processors.Count != 1)
+        {
+            await ServeError(interaction, "An unexpected error occurred, please try again later!");
+        }
+
+        var commandProcessor = processors.Single();
+
+        await commandProcessor.ProcessFollowUpToCommand(interaction);
     }
 
     private async Task<InitFisherResult?> InitFisher(DiscordInteraction interaction)
@@ -300,21 +309,6 @@ public class SisyphishController : ControllerBase
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
             .UpdateAsync("items", FieldValue.ArrayUnion(item.ToString()));
-    }
-
-    private async Task DeleteFisher(DiscordInteraction interaction)
-    {
-        var documents = await _firestoreDb.Collection("fishers")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .Limit(1)
-            .GetSnapshotAsync();
-
-        var document = documents.SingleOrDefault();
-
-        if (document != null)
-        {
-            await document.Reference.DeleteAsync();
-        }
     }
 
     private async Task DeletePrompt(DiscordInteraction interaction)
