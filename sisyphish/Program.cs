@@ -8,6 +8,7 @@ using sisyphish.Discord;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud;
 using sisyphish.Sisyphish.Processors;
+using sisyphish.Sisyphish.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Buil
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordAttribute>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
+builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
 
 var commandProcessors = Assembly.GetAssembly(typeof(ICommandProcessor))?
     .GetTypes()
