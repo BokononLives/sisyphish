@@ -1,6 +1,7 @@
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud;
+using sisyphish.Sisyphish.Models;
 using sisyphish.Sisyphish.Services;
 
 namespace sisyphish.Sisyphish.Processors;
@@ -22,7 +23,7 @@ public class ResetCommandProcessor : ICommandProcessor
 
     public async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction)
     {   
-        await _discord.DeferResponse(interaction, isEphemeral: false);
+        await _discord.DeferResponse(interaction, isEphemeral: true);
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
         
         var response = new DeferredDiscordInteractionResponse();
@@ -31,9 +32,16 @@ public class ResetCommandProcessor : ICommandProcessor
 
     public async Task ProcessFollowUpToCommand(DiscordInteraction interaction)
     {
-        var content = $"Bye, <@{interaction.UserId}>!";
+        var expedition = new Expedition(interaction.UserId)
+        {
+            Event = Event.ResetData
+        };
 
-        await _fisherService.DeleteFisher(interaction);
-        await _discord.EditResponse(interaction, content, []);
+        await _fisherService.CreatePrompt(interaction, expedition);
+
+        var content = expedition.GetContent();
+        var components = expedition.GetComponents();
+
+        await _discord.EditResponse(interaction, content, components);
     }
 }
