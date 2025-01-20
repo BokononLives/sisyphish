@@ -146,11 +146,23 @@ public class FirestoreDbFisherService : IFisherService
             });
     }
 
-    public async Task AddItem(Fisher fisher, Item item)
+    public async Task AddItem(Fisher fisher, ItemType itemType)
     {
+        var items = fisher.Items;
+        var item = items.SingleOrDefault(i => i.Type == itemType);
+
+        if (item != null)
+        {
+            item.Count++;
+        }
+        else
+        {
+            items.Add(new Item { Type = itemType, Count = 1 });
+        }
+
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
-            .UpdateAsync("items", FieldValue.ArrayUnion(item.ToString())); //TODO: allow dupes, or use array of map?
+            .UpdateAsync("items", items);
     }
 
     public async Task CreatePrompt(DiscordInteraction interaction, Expedition expedition)

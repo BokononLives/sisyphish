@@ -11,5 +11,6 @@ public class Fisher : FirestoreDocument
     [FirestoreProperty("fish_caught")] public long? FishCaught { get; set; }
     [FirestoreProperty("biggest_fish")] public long? BiggestFish { get; set; }
     [FirestoreProperty("locked_at")] public DateTime? LockedAt { get; set; }
+    [FirestoreProperty("items")] public List<Item> Items { get; set; } = [];
     public bool IsLocked => LockedAt != null && LockedAt < DateTime.UtcNow.AddMinutes(-1);
 }
