@@ -2,21 +2,11 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NSec.Cryptography;
-using sisyphish.GoogleCloud;
 
 namespace sisyphish.Filters;
 
 public class DiscordAttribute : IAsyncActionFilter
 {
-    private readonly ICloudTasksService _cloudTasks;
-    private readonly ILogger<DiscordAttribute> _logger;
-
-    public DiscordAttribute(ICloudTasksService cloudTasks, ILogger<DiscordAttribute> logger)
-    {
-        _cloudTasks = cloudTasks;
-        _logger = logger;
-    }
-
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
