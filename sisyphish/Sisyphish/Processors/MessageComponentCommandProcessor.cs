@@ -87,7 +87,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
                         
                     case Event.FoundTreasureChest:
                         var item = interaction.PromptResponse == "open"
-                            ? (Item?)Random.Shared.GetItems(Enum.GetValues<Item>(), 1).Single()
+                            ? (ItemType?)Random.Shared.GetItems(Enum.GetValues<ItemType>(), 1).Single()
                             : null;
                         
                         if (item == null)

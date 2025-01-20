@@ -1,10 +1,10 @@
+using Google.Cloud.Firestore;
+
 namespace sisyphish.Sisyphish.Models;
 
-public enum Item
+[FirestoreData]
+public class Item
 {
-    Ruby,
-    Pearl,
-    Emerald,
-    Diamond,
-    Boot
+    [FirestoreProperty(ConverterType = typeof(FirestoreEnumNameConverter<ItemType>), Name = "type")] public ItemType Type { get; set; }
+    [FirestoreProperty("count")] public long? Count { get; set; }
 }
