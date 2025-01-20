@@ -42,6 +42,14 @@ public class SisyphishController : ControllerBase
     [GoogleCloud]
     public async Task<IActionResult> ProcessEvent(DiscordInteraction interaction)
     {
+        // var commandProcessors = _commandProcessors
+        //     .OfType<MessageComponentCommandProcessor>()
+        //     .ToList<ICommandProcessor>();
+        
+        // await ProcessFollowUpToCommand(interaction, commandProcessors);
+        
+        // return Ok();
+
         var initFisherResult = await InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
         
@@ -84,8 +92,8 @@ public class SisyphishController : ControllerBase
     public async Task<IActionResult> ProcessResetCommand(DiscordInteraction interaction)
     {
         var commandProcessors = _commandProcessors
-            .OfType<MessageComponentCommandProcessor>()
-            .ToList<ICommandProcessor>();
+            .Where(p => p.Command == DiscordCommandName.Reset)
+            .ToList();
         
         await ProcessFollowUpToCommand(interaction, commandProcessors);
         
