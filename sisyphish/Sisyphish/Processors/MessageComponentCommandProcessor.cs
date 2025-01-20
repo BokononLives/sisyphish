@@ -64,6 +64,27 @@ public class MessageComponentCommandProcessor : ICommandProcessor
             {
                 switch (prompt?.Event)
                 {
+                    case Event.ResetData:
+                        if (interaction.PromptResponse == "confirm")
+                        {
+                            var content = $"Bye, <@{interaction.UserId}>!";
+
+                            await _fisherService.DeleteFisher(interaction);
+                            await _discord.EditResponse(interaction, content, []);
+
+                            fisher = null;
+                        }
+                        else
+                        {
+                            var content = $"Fish on, <@{interaction.UserId}>.";
+
+                            await _discord.EditResponse(interaction, content, []);
+                        }
+
+                        await _fisherService.DeletePrompt(interaction);
+
+                        break;
+                        
                     case Event.FoundTreasureChest:
                         var item = interaction.PromptResponse == "open"
                             ? (Item?)Random.Shared.GetItems(Enum.GetValues<Item>(), 1).Single()

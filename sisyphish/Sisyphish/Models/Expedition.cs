@@ -18,9 +18,16 @@ public class Expedition
     public bool? CaughtFish { get; set; }
     public string? PromptId { get; }
 
-    public string GetContent(Fisher fisher)
+    public string GetContent(Fisher? fisher = null)
     {
         var result = new StringBuilder();
+
+        if (Event == Event.ResetData)
+        {
+            result.AppendLine("Really delete all data? Your progress will be reset to zero. This action is irreversible.");
+            return result.ToString();
+        }
+
         result.AppendLine($"You cast your line into the Sea of Possibilities...");
 
         if (Event == Event.FoundTreasureChest)
@@ -82,6 +89,30 @@ public class Expedition
     {
         return Event switch
         {
+            Event.ResetData =>
+            [
+                new DiscordComponent
+                {
+                    Type = DiscordMessageComponentType.ActionRow,
+                    Components =
+                    [
+                        new DiscordComponent
+                        {
+                            Type = DiscordMessageComponentType.Button,
+                            CustomId = $"confirm_{_userId}_{PromptId}",
+                            Label = "Delete my data forever.",
+                            Style = DiscordButtonStyleType.Danger
+                        },
+                        new DiscordComponent
+                        {
+                            Type = DiscordMessageComponentType.Button,
+                            CustomId = $"cancel_{_userId}_{PromptId}",
+                            Label = "Cancel",
+                            Style = DiscordButtonStyleType.Secondary
+                        }
+                    ]
+                }
+            ],
             Event.FoundTreasureChest =>
             [
                 new DiscordComponent
