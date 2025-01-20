@@ -1,6 +1,7 @@
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud;
+using sisyphish.Sisyphish.Models;
 using sisyphish.Sisyphish.Services;
 
 namespace sisyphish.Sisyphish.Processors;
@@ -49,10 +50,46 @@ public class MessageComponentCommandProcessor : ICommandProcessor
     {
         var initFisherResult = await _fisherService.InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
+        
+        var initPromptResult = await _fisherService.InitPrompt(interaction);
+        var prompt = initPromptResult?.Prompt;
 
         try
         {
-            //TODO
+            if (fisher == null || prompt == null || initFisherResult?.InitSuccess != true || initPromptResult?.InitSuccess != true)
+            {
+                await _discord.DeleteResponse(interaction);
+            }
+            else
+            {
+                switch (prompt?.Event)
+                {
+                    case Event.FoundTreasureChest:
+                        var item = interaction.PromptResponse == "open"
+                            ? (Item?)Random.Shared.GetItems(Enum.GetValues<Item>(), 1).Single()
+                            : null;
+                        
+                        if (item == null)
+                        {
+                            var content = $"You get nothing!";
+
+                            await _discord.EditResponse(interaction, content, []);
+                        }
+                        else
+                        {
+                            var content = $"Inside the chest was: 1 {item}!";
+
+                            await _fisherService.AddItem(fisher, item.Value);
+                            await _discord.EditResponse(interaction, content, []);
+                        }
+                        
+                        await _fisherService.DeletePrompt(interaction);
+                        
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
         catch (Exception ex)
         {

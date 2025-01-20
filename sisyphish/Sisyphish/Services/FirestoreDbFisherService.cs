@@ -165,4 +165,93 @@ public class FirestoreDbFisherService : IFisherService
 
         await _firestoreDb.Collection("prompts").AddAsync(prompt);
     }
+
+    public async Task<InitPromptResult?> InitPrompt(DiscordInteraction interaction)
+    {
+        try
+        {
+            var result = new InitPromptResult();
+
+            var prompt = await GetPrompt(interaction);
+            result.Prompt = prompt;
+
+            if (prompt == null)
+            {
+                _logger.LogWarning($"Prompt was unexpectedly null - {interaction.Data?.CustomId}");
+            }
+            else if (prompt.IsLocked)
+            {
+                _logger.LogInformation($"Prompt was locked - {interaction.PromptId}");
+            }
+            else
+            {
+                try
+                {
+                    await LockPrompt(prompt);
+                    result.InitSuccess = true;
+                }
+                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
+                {
+                    _logger.LogInformation($"Failed to lock prompt - {interaction.PromptId}");
+                }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error initializing prompt");
+
+            return new InitPromptResult();
+        }
+    }
+
+    public async Task<Prompt?> GetPrompt(DiscordInteraction interaction)
+    {
+        if (string.IsNullOrWhiteSpace(interaction.PromptId))
+        {
+            return null;
+        }
+
+        var documents = await _firestoreDb.Collection("prompts")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .WhereEqualTo("discord_prompt_id", interaction.PromptId)
+            .Limit(1)
+            .GetSnapshotAsync();
+
+        var document = documents.SingleOrDefault();
+        if (document == null)
+        {
+            return null;
+        }
+
+        var prompt = document.ConvertTo<Prompt>();
+        prompt.Id = document.Id;
+        prompt.LastUpdated = document.UpdateTime?.ToDateTime();
+        return prompt;
+    }
+
+    public async Task LockPrompt(Prompt prompt)
+    {
+        await _firestoreDb.Collection("prompts")
+            .Document(prompt.Id)
+            .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(prompt.LastUpdated!.Value)));
+    }
+
+    public async Task DeletePrompt(DiscordInteraction interaction)
+    {
+
+        var documents = await _firestoreDb.Collection("prompts")
+            .WhereEqualTo("discord_user_id", interaction.UserId)
+            .WhereEqualTo("discord_prompt_id", interaction.PromptId)
+            .Limit(1)
+            .GetSnapshotAsync();
+        
+        var document = documents.SingleOrDefault();
+
+        if (document != null)
+        {
+            await document.Reference.DeleteAsync();
+        }
+    }
 }
