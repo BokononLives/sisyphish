@@ -135,14 +135,27 @@ public class FirestoreDbFisherService : IFisherService
         }
     }
 
-    public async Task AddFish(Fisher fisher, long fishSize)
+    public async Task AddFish(Fisher fisher, FishType fishType, long fishSize)
     {
+        var fishes = fisher.Fish;
+        var fish = fishes.SingleOrDefault(f => f.Type == fishType);
+
+        if (fish != null)
+        {
+            fish.Count++;
+        }
+        else
+        {
+            fishes.Add(new Fish { Type = fishType, Count = 1 });
+        }
+
         await _firestoreDb.Collection("fishers")
             .Document(fisher.Id)
             .UpdateAsync(new Dictionary<string, object>
             {
                 { "fish_caught", FieldValue.Increment(1) },
-                { "biggest_fish", Math.Max(fisher.BiggestFish ?? 0, fishSize) }
+                { "biggest_fish", Math.Max(fisher.BiggestFish ?? 0, fishSize) },
+                { "fish", fishes }
             });
     }
 
