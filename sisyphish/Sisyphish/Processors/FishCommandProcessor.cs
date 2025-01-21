@@ -135,6 +135,9 @@ public class FishCommandProcessor : ICommandProcessor
             return expedition;
         }
 
+        var fishType = FishType.BettaTester;
+        expedition.FishType = fishType;
+
         var fishSize = 0;
         int fishRoll;
 
@@ -158,7 +161,6 @@ public class FishCommandProcessor : ICommandProcessor
         if (reelStrength >= fishSize)
         {
             expedition.CaughtFish = true;
-            expedition.FishType = FishType.BettaTester;
         }
 
         return expedition;
