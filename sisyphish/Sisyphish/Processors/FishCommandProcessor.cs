@@ -77,7 +77,7 @@ public class FishCommandProcessor : ICommandProcessor
                     
                     if (expedition.CaughtFish == true)
                     {
-                        await _fisherService.AddFish(fisher, (long)expedition.FishSize!);
+                        await _fisherService.AddFish(fisher, expedition.FishType!.Value, (long)expedition.FishSize!);
                     }
 
                     var content = expedition.GetContent(fisher);
@@ -158,6 +158,7 @@ public class FishCommandProcessor : ICommandProcessor
         if (reelStrength >= fishSize)
         {
             expedition.CaughtFish = true;
+            expedition.FishType = FishType.BettaTester;
         }
 
         return expedition;

@@ -10,7 +10,7 @@ public interface IFisherService
     Task<Fisher?> CreateFisher(DiscordInteraction interaction);
     Task LockFisher(Fisher fisher);
     Task UnlockFisher(Fisher? fisher);
-    Task AddFish(Fisher fisher, long fishSize);
+    Task AddFish(Fisher fisher, FishType fishType, long fishSize);
     Task AddItem(Fisher fisher, ItemType item);
     Task<InitFisherResult?> InitFisher(DiscordInteraction interaction);
     Task CreatePrompt(DiscordInteraction interaction, Expedition expedition);
