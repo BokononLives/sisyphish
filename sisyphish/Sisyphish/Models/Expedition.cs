@@ -16,6 +16,7 @@ public class Expedition
     public Event Event { get; set; }
     public int? FishSize { get; set; }
     public bool? CaughtFish { get; set; }
+    public FishType? FishType { get; set; }
     public string? PromptId { get; }
 
     public string GetContent(Fisher? fisher = null)
