@@ -16,7 +16,7 @@
 
 ### **Prerequisites:**
 - Create and configure a Discord Application and note the *ApplicationID*, *PublicKey* and *Token*.
-- Create a Firestore collection in Google Cloud named "fishers" and note the **ProjectID* (database schema is changing rapidly, so it is omitted from this guide).
+- Create a Firestore collection in Google Cloud named "fishers" and note the **ProjectID*.
 - Set up your permissions correctly in Google Cloud (e.g., IAM roles for the service account running your worker)
 
 ### **Before opening project:**

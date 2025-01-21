@@ -65,7 +65,7 @@ public class Expedition
 
         if (CaughtFish == true)
         {
-            result.AppendLine($"You reel it in! Congratulations! You got a fish. It's {FishSize} cm!");
+            result.AppendLine($"You reel it in! Congratulations! You got a fish. It's a {FishSize} cm {FishType}!");
                 
             if (FishSize > fisher!.BiggestFish)
             {
