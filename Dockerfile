@@ -9,16 +9,13 @@ ARG PACKAGE_SOURCE_PASSWORD
 
 WORKDIR /src
 COPY ["sisyphish/sisyphish.csproj", "sisyphish/"]
+RUN dotnet restore "sisyphish/sisyphish.csproj"
 
 COPY . .
 WORKDIR "/src/sisyphish"
-RUN dotnet build "sisyphish.csproj" -c Release -o /app/build
-
-
-FROM build AS publish
-RUN dotnet publish "sisyphish.csproj" -c Release -o /app/publish
+RUN dotnet publish "sisyphish.csproj" -c Release -r linux-x64 -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "sisyphish.dll"]
