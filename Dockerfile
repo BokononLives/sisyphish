@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM debian:bookworm-slim AS base
 WORKDIR /app
 EXPOSE 80
 
@@ -6,6 +6,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG PACKAGE_SOURCE_PATH
 ARG PACKAGE_SOURCE_USERNAME
 ARG PACKAGE_SOURCE_PASSWORD
+
+RUN apt-get update && apt-get install -y clang libc6-dev
 
 WORKDIR /src
 COPY ["sisyphish/sisyphish.csproj", "sisyphish/"]
