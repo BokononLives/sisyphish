@@ -1,13 +1,14 @@
-FROM debian:bookworm-slim AS base
+FROM alpine AS base
 WORKDIR /app
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 ARG PACKAGE_SOURCE_PATH
 ARG PACKAGE_SOURCE_USERNAME
 ARG PACKAGE_SOURCE_PASSWORD
 
-RUN apt-get update && apt-get install -y clang libc6-dev
+RUN apk update && apk upgrade
+RUN apk add --no-cache clang build-base zlib-dev
 
 WORKDIR /src
 COPY ["sisyphish/sisyphish.csproj", "sisyphish/"]
@@ -20,4 +21,4 @@ RUN dotnet publish "sisyphish.csproj" -c Release -r linux-x64 -o /app/publish --
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "sisyphish.dll"]
+ENTRYPOINT ["./sisyphish"]
