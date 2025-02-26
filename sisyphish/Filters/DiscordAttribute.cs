@@ -21,6 +21,8 @@ public class DiscordFilter : IEndpointFilter
             return Results.Unauthorized();
         }
 
+        context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
+        
         return await next(context);
     }
 

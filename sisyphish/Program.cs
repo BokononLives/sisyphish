@@ -83,7 +83,7 @@ app.MapPost("sisyphish/fish", async (HttpContext context, SisyphishController co
     await controller.ProcessFishCommand(interaction);
 
     return Results.Ok();
-});
+}).AddEndpointFilter<GoogleCloudFilter>();
 
 app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController controller) =>
 {
@@ -96,7 +96,7 @@ app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController c
     await controller.ProcessEvent(interaction);
 
     return Results.Ok();
-});
+}).AddEndpointFilter<GoogleCloudFilter>();
 
 app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController controller) =>
 {
@@ -109,7 +109,7 @@ app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController c
     await controller.ProcessResetCommand(interaction);
 
     return Results.Ok();
-});
+}).AddEndpointFilter<GoogleCloudFilter>();
 
 if (Config.IsDevelopment)
 {
