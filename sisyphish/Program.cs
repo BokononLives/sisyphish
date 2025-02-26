@@ -119,7 +119,6 @@ if (Config.IsDevelopment)
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
-app.MapControllers();
 
 app.Use(async (context, next) =>
 {
