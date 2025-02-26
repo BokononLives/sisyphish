@@ -14,6 +14,8 @@ using sisyphish.Sisyphish.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAuthorization();
+
 builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
 builder.Logging.AddGoogle(new LoggingServiceOptions
