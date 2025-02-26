@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 using Google.Cloud.Diagnostics.Common;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
+using sisyphish;
 using sisyphish.Controllers;
 using sisyphish.Discord;
-using sisyphish.Discord.Models;
 using sisyphish.Extensions;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud;
@@ -61,7 +61,7 @@ app.MapGet("/", (HomeController controller) =>
 
 app.MapPost("/", async (HttpContext context, HomeController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
@@ -74,7 +74,7 @@ app.MapPost("/", async (HttpContext context, HomeController controller) =>
 
 app.MapPost("sisyphish/fish", async (HttpContext context, SisyphishController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
@@ -87,7 +87,7 @@ app.MapPost("sisyphish/fish", async (HttpContext context, SisyphishController co
 
 app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
@@ -100,7 +100,7 @@ app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController c
 
 app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
