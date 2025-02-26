@@ -5,7 +5,7 @@ namespace sisyphish;
 
 [JsonSourceGenerationOptions(
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase // AOT-Compatible Naming Policy
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase
 )]
 [JsonSerializable(typeof(DiscordInteraction))]
 [JsonSerializable(typeof(DiscordDeferralCallbackResponse))]
