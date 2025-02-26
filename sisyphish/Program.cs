@@ -1,10 +1,12 @@
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Google.Cloud.Diagnostics.Common;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
+using sisyphish.Controllers;
 using sisyphish.Discord;
+using sisyphish.Discord.Models;
+using sisyphish.Extensions;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud;
 using sisyphish.Sisyphish.Processors;
@@ -26,32 +28,86 @@ var setUpJsonSerializerOptions = (JsonSerializerOptions options) =>
     options.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
 };
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        setUpJsonSerializerOptions(options.JsonSerializerOptions);
-    });
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    setUpJsonSerializerOptions(options.SerializerOptions);
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GoogleProjectId));
 builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Build());
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
-builder.Services.AddScoped<DiscordAttribute>();
+builder.Services.AddScoped<DiscordFilter>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
 builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
-
-var commandProcessors = Assembly.GetAssembly(typeof(ICommandProcessor))?
-    .GetTypes()
-    .Where(type => typeof(ICommandProcessor).IsAssignableFrom(type) && !type.IsInterface)
-    .ToList() ?? [];
-
-foreach (var commandProcessorType in commandProcessors)
-{
-    builder.Services.AddScoped(typeof(ICommandProcessor), commandProcessorType);
-}
+builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
+[
+    new FishCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>(), x.GetRequiredService<ILogger<FishCommandProcessor>>()),
+    new MessageComponentCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>(), x.GetRequiredService<ILogger<MessageComponentCommandProcessor>>()),
+    new ResetCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>())
+]);
+builder.Services.AddScoped<HomeController>();
+builder.Services.AddScoped<SisyphishController>();
 
 var app = builder.Build();
+
+app.MapGet("/", (HomeController controller) =>
+{
+    return controller.Get();
+});
+
+app.MapPost("/", async (HttpContext context, HomeController controller) =>
+{
+    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    if (interaction == null)
+    {
+        return Results.BadRequest("Invalid request");
+    }
+
+    var response = await controller.Post(interaction);
+
+    return response.ToResult();
+}).AddEndpointFilter<DiscordFilter>();
+
+app.MapPost("sisyphish/fish", async (HttpContext context, SisyphishController controller) =>
+{
+    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    if (interaction == null)
+    {
+        return Results.BadRequest("Invalid request");
+    }
+
+    await controller.ProcessFishCommand(interaction);
+
+    return Results.Ok();
+});
+
+app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController controller) =>
+{
+    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    if (interaction == null)
+    {
+        return Results.BadRequest("Invalid request");
+    }
+
+    await controller.ProcessEvent(interaction);
+
+    return Results.Ok();
+});
+
+app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController controller) =>
+{
+    var interaction = await context.Request.ReadFromJsonAsync<DiscordInteraction>();
+    if (interaction == null)
+    {
+        return Results.BadRequest("Invalid request");
+    }
+
+    await controller.ProcessResetCommand(interaction);
+
+    return Results.Ok();
+});
 
 if (Config.IsDevelopment)
 {

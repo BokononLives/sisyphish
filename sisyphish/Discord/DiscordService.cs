@@ -1,6 +1,4 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using sisyphish.Discord.Models;
 
 namespace sisyphish.Discord;
@@ -8,12 +6,10 @@ namespace sisyphish.Discord;
 public class DiscordService : IDiscordService
 {
     private readonly ILogger<DiscordService> _logger;
-    private readonly IOptions<JsonOptions> _jsonOptions;
 
-    public DiscordService(ILogger<DiscordService> logger, IOptions<JsonOptions> jsonOptions)
+    public DiscordService(ILogger<DiscordService> logger)
     {
         _logger = logger;
-        _jsonOptions = jsonOptions;
     }
 
     public async Task DeferResponse(DiscordInteraction interaction, bool isEphemeral)
@@ -28,7 +24,7 @@ public class DiscordService : IDiscordService
             return await httpClient.PostAsJsonAsync(
                 requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
                 value: body,
-                options: _jsonOptions.Value.JsonSerializerOptions);
+                jsonTypeInfo: SisyphishJsonContext.Default.DiscordDeferralCallbackResponse);
         });
     }
 
@@ -57,7 +53,7 @@ public class DiscordService : IDiscordService
             return await httpClient.PatchAsJsonAsync(
                 requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
                 value: body,
-                options: _jsonOptions.Value.JsonSerializerOptions
+                jsonTypeInfo: SisyphishJsonContext.Default.DiscordInteractionEdit
             );
         });
     }
@@ -76,7 +72,7 @@ public class DiscordService : IDiscordService
             return await httpClient.PostAsJsonAsync(
                 requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}",
                 value: body,
-                options: _jsonOptions.Value.JsonSerializerOptions
+                jsonTypeInfo: SisyphishJsonContext.Default.DiscordInteractionEdit
             );
         });
     }

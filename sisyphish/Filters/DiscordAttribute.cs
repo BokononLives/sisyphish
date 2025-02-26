@@ -1,13 +1,11 @@
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NSec.Cryptography;
 
 namespace sisyphish.Filters;
 
-public class DiscordAttribute : IAsyncActionFilter
+public class DiscordFilter : IEndpointFilter
 {
-    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
 
@@ -20,11 +18,10 @@ public class DiscordAttribute : IAsyncActionFilter
 
         if (!verified)
         {
-            context.Result = new UnauthorizedObjectResult("Invalid request");
-            return;
+            return Results.Unauthorized();
         }
 
-        await next();
+        return await next(context);
     }
 
     private static byte[] GetBytesFromHexString(string hex)
