@@ -1,24 +1,21 @@
 using System.Text.Json;
 using Google.Cloud.Tasks.V2;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
+using sisyphish.Discord.Models;
 
 namespace sisyphish.GoogleCloud;
 
 public class CloudTasksService : ICloudTasksService
 {
     private readonly CloudTasksClient _cloudTasks;
-    private readonly IOptions<JsonOptions> _jsonOptions;
 
-    public CloudTasksService(CloudTasksClient cloudTasks, IOptions<JsonOptions> jsonOptions)
+    public CloudTasksService(CloudTasksClient cloudTasks)
     {
         _cloudTasks = cloudTasks;
-        _jsonOptions = jsonOptions;
     }
 
-    public async System.Threading.Tasks.Task CreateHttpPostTask(string url, object body)
+    public async System.Threading.Tasks.Task CreateHttpPostTask(string url, DiscordInteraction body)
     {
-        var serializedBody = JsonSerializer.Serialize(body, _jsonOptions.Value.JsonSerializerOptions);
+        var serializedBody = JsonSerializer.Serialize(body, SisyphishJsonContext.Default.DiscordInteraction);
 
         var createTaskRequest = new CreateTaskRequest
         {

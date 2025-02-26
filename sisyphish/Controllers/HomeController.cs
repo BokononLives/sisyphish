@@ -1,13 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using sisyphish.Discord.Models;
-using sisyphish.Extensions;
-using sisyphish.Filters;
 using sisyphish.Sisyphish.Processors;
 
 namespace sisyphish.Controllers;
 
-[ApiController]
-public class HomeController : ControllerBase
+public class HomeController
 {
     private readonly IEnumerable<ICommandProcessor> _commandProcessors;
 
@@ -15,16 +11,12 @@ public class HomeController : ControllerBase
     {
         _commandProcessors = commandProcessors;
     }
-
-    [HttpGet("")]
     public string Get()
     {
         return "Hello world!";
     }
 
-    [ServiceFilter(typeof(DiscordAttribute))]
-    [HttpPost("")]
-    public async Task<IActionResult> PostAsync(DiscordInteraction interaction)
+    public async Task<IDiscordInteractionResponse> Post(DiscordInteraction interaction)
     {
         var response = (interaction?.Type) switch
         {
@@ -35,7 +27,7 @@ public class HomeController : ControllerBase
             _ => new DiscordInteractionErrorResponse { Error = "Invalid interaction type" },
         };
         
-        return this.From(response);
+        return response;
     }
 
     private static DiscordInteractionResponse Pong()

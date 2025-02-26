@@ -1,12 +1,10 @@
 using Google.Apis.Auth;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace sisyphish.Filters;
 
-public class GoogleCloudAttribute : ActionFilterAttribute
+public class GoogleCloudFilter : IEndpointFilter
 {
-    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var authHeaderPrefix = "Bearer ";
 
@@ -19,10 +17,10 @@ public class GoogleCloudAttribute : ActionFilterAttribute
 
             if (payload.Email.Equals(Config.GoogleServiceAccount))
             {
-                await next();
+                await next(context);
             }
         }
-        
-        context.Result = new UnauthorizedObjectResult("Invalid request");
+
+        return Results.Unauthorized();
     }
 }
