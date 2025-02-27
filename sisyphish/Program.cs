@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Diagnostics.Common;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
@@ -38,7 +39,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GoogleProjectId));
-builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder().Build());
+
+var googleCredential = await GoogleCredential.GetApplicationDefaultAsync();
+builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder { Credential = googleCredential }.Build());
+
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordFilter>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
