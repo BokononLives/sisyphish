@@ -81,7 +81,7 @@ public class CloudTasksService : ICloudTasksService
         using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
 
         var accessTokenResponse = await httpClient.GetFromJsonAsync(
-            requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default-token",
+            requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/token",
             jsonTypeInfo: SnakeCaseJsonContext.Default.GoogleCloudAccessToken
         );
 
