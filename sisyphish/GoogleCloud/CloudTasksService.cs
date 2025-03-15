@@ -1,41 +1,101 @@
+using System.Text;
 using System.Text.Json;
-using Google.Cloud.Tasks.V2;
 using sisyphish.Discord.Models;
+using sisyphish.GoogleCloud.Models;
 
 namespace sisyphish.GoogleCloud;
 
 public class CloudTasksService : ICloudTasksService
 {
-    private readonly CloudTasksClient _cloudTasks;
+    // private readonly CloudTasksClient _cloudTasks;
+    private readonly ILogger<CloudTasksService> _logger;
 
-    public CloudTasksService(CloudTasksClient cloudTasks)
+    private string? _accessToken;
+    private DateTime? _accessTokenExpirationDate;
+
+    public CloudTasksService( /*CloudTasksClient cloudTasks,*/ ILogger<CloudTasksService> logger)
     {
-        _cloudTasks = cloudTasks;
+        // _cloudTasks = cloudTasks;
+        _logger = logger;
     }
 
-    public async System.Threading.Tasks.Task CreateHttpPostTask(string url, DiscordInteraction body)
+    public async Task CreateHttpPostTask(string url, DiscordInteraction body)
     {
-        var serializedBody = JsonSerializer.Serialize(body, SisyphishJsonContext.Default.DiscordInteraction);
+        var accessToken = await GetAccessToken();
 
-        var createTaskRequest = new CreateTaskRequest
+        var serializedBody = JsonSerializer.Serialize(body, SnakeCaseJsonContext.Default.DiscordInteraction);
+        var encodedBody = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedBody));
+
+        var taskRequest = new GoogleCloudTaskRequest
         {
-            ParentAsQueueName = QueueName.FromProjectLocationQueue(Config.GoogleProjectId, Config.GoogleLocation, Config.GoogleProjectId),
-            Task = new Google.Cloud.Tasks.V2.Task
+            Task = new GoogleCloudTask
             {
-                HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
+                HttpRequest = new GoogleCloudHttpRequest
                 {
-                    HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
-                    Headers = {{ "Content-Type", "application/json" }},
-                    Body =  Google.Protobuf.ByteString.CopyFromUtf8(serializedBody),
+                    HttpMethod = "POST",
                     Url = url,
-                    OidcToken = new OidcToken
-                    {
-                        ServiceAccountEmail = Config.GoogleServiceAccount
-                    }
+                    Body = encodedBody
                 }
             }
         };
 
-        await _cloudTasks.CreateTaskAsync(createTaskRequest);
+        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Authorization", $"Bearer {accessToken}" } } };
+
+        await httpClient.PostAsJsonAsync(
+            requestUri: $"{Config.GoogleTasksBaseUrl}/queues/{Config.GoogleProjectId}",
+            value: taskRequest,
+            jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudTaskRequest
+        );
+
+        
+
+        // var createTaskRequest = new CreateTaskRequest
+        // {
+        //     ParentAsQueueName = QueueName.FromProjectLocationQueue(Config.GoogleProjectId, Config.GoogleLocation, Config.GoogleProjectId),
+        //     Task = new Google.Cloud.Tasks.V2.Task
+        //     {
+        //         HttpRequest = new Google.Cloud.Tasks.V2.HttpRequest
+        //         {
+        //             HttpMethod = Google.Cloud.Tasks.V2.HttpMethod.Post,
+        //             Headers = {{ "Content-Type", "application/json" }},
+        //             Body =  Google.Protobuf.ByteString.CopyFromUtf8(serializedBody),
+        //             Url = url,
+        //             OidcToken = new OidcToken
+        //             {
+        //                 ServiceAccountEmail = Config.GoogleServiceAccount
+        //             }
+        //         }
+        //     }
+        // };
+
+        // await _cloudTasks.CreateTaskAsync(createTaskRequest);
+    }
+
+    private async Task<string> GetAccessToken()
+    {
+        if (!string.IsNullOrWhiteSpace(_accessToken) && (_accessTokenExpirationDate == null || _accessTokenExpirationDate > DateTime.UtcNow))
+        {
+            return _accessToken;
+        }
+
+        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
+
+        var accessTokenResponse = await httpClient.GetFromJsonAsync(
+            requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default-token",
+            jsonTypeInfo: SnakeCaseJsonContext.Default.GoogleCloudAccessToken
+        );
+
+        if (accessTokenResponse?.AccessToken == null)
+        {
+            _logger.LogError(@$"Google Access Token was unexpectedly null:
+                - response: {accessTokenResponse}");
+
+            throw new Exception("Unable to acquire Google Access token");
+        }
+        
+        _accessToken = accessTokenResponse.AccessToken;
+        _accessTokenExpirationDate = DateTime.UtcNow.AddSeconds((accessTokenResponse.ExpiresIn ?? 0) - 60);
+
+        return _accessToken;
     }
 }
