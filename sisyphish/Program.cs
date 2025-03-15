@@ -40,10 +40,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GoogleProjectId));
 
-var googleCredential = await GoogleCredential.GetApplicationDefaultAsync();
-builder.Services.AddScoped(serviceProvider => new CloudTasksClientBuilder { Credential = googleCredential }.Build());
-
-builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordFilter>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
 builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
