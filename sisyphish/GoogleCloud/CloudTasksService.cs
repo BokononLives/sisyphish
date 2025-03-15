@@ -42,12 +42,12 @@ public class CloudTasksService : ICloudTasksService
         using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Authorization", $"Bearer {accessToken}" } } };
 
         var taskResponse = await httpClient.PostAsJsonAsync(
-            requestUri: $"{Config.GoogleTasksBaseUrl}/queues/{Config.GoogleProjectId}",
+            requestUri: $"{Config.GoogleTasksBaseUrl}/tasks",
             value: taskRequest,
             jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudTaskRequest
         );
 
-        var taskResponseString = taskResponse.Content.ReadAsStringAsync();
+        var taskResponseString = await taskResponse.Content.ReadAsStringAsync();
 
         _logger.LogInformation($@"Task requested:
             - response code: {taskResponse.StatusCode}
