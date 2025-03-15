@@ -9,8 +9,8 @@ public class CloudTasksService : ICloudTasksService
 {
     private readonly ILogger<CloudTasksService> _logger;
 
-    // private string? _accessToken;
-    // private DateTime? _accessTokenExpirationDate;
+    private string? _accessToken;
+    private DateTime? _accessTokenExpirationDate;
 
     public CloudTasksService(ILogger<CloudTasksService> logger)
     {
@@ -19,8 +19,8 @@ public class CloudTasksService : ICloudTasksService
 
     public async Task CreateHttpPostTask(string url, DiscordInteraction body)
     {
-        //var accessToken = await GetAccessToken();
-        var oidcToken = await GetOidcToken(url);
+        var accessToken = await GetAccessToken();
+        //var oidcToken = await GetOidcToken(url);
 
         var serializedBody = JsonSerializer.Serialize(body, SnakeCaseJsonContext.Default.DiscordInteraction);
         var encodedBody = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedBody));
@@ -46,7 +46,7 @@ public class CloudTasksService : ICloudTasksService
             }
         };
 
-        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Authorization", $"Bearer {oidcToken}" } } };
+        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Authorization", $"Bearer {accessToken}" } } };
 
         var taskResponse = await httpClient.PostAsJsonAsync(
             requestUri: $"{Config.GoogleTasksBaseUrl}/tasks",
@@ -62,50 +62,50 @@ public class CloudTasksService : ICloudTasksService
         ");
     }
 
-    // private async Task<string> GetAccessToken()
-    // {
-    //     if (!string.IsNullOrWhiteSpace(_accessToken) && (_accessTokenExpirationDate == null || _accessTokenExpirationDate > DateTime.UtcNow))
-    //     {
-    //         return _accessToken;
-    //     }
-
-    //     using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
-
-    //     var accessTokenResponse = await httpClient.GetFromJsonAsync(
-    //         requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/token",
-    //         jsonTypeInfo: SnakeCaseJsonContext.Default.GoogleCloudAccessToken
-    //     );
-
-    //     if (string.IsNullOrWhiteSpace(accessTokenResponse?.AccessToken))
-    //     {
-    //         _logger.LogError(@$"Google Access Token was unexpectedly null:
-    //             - response: {accessTokenResponse}");
-
-    //         throw new Exception("Unable to acquire Google Access token");
-    //     }
-        
-    //     _accessToken = accessTokenResponse.AccessToken;
-    //     _accessTokenExpirationDate = DateTime.UtcNow.AddSeconds((accessTokenResponse.ExpiresIn ?? 0) - 60);
-
-    //     return _accessToken;
-    // }
-
-    private async Task<string> GetOidcToken(string audience) //TODO: store in private variable for reuse - requires decoding to find expiration
+    private async Task<string> GetAccessToken()
     {
-        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
-
-        var oidcTokenResponse = await httpClient.GetStringAsync(
-            requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/identity?audience={Uri.EscapeDataString(audience)}"
-        );
-
-        if (string.IsNullOrWhiteSpace(oidcTokenResponse))
+        if (!string.IsNullOrWhiteSpace(_accessToken) && (_accessTokenExpirationDate == null || _accessTokenExpirationDate > DateTime.UtcNow))
         {
-            _logger.LogError(@$"Google Oidc Token was unexpectedly null:
-                - response: {oidcTokenResponse}");
-
-            throw new Exception("Unable to acquire Google Oidc token");
+            return _accessToken;
         }
 
-        return oidcTokenResponse;
+        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
+
+        var accessTokenResponse = await httpClient.GetFromJsonAsync(
+            requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/token",
+            jsonTypeInfo: SnakeCaseJsonContext.Default.GoogleCloudAccessToken
+        );
+
+        if (string.IsNullOrWhiteSpace(accessTokenResponse?.AccessToken))
+        {
+            _logger.LogError(@$"Google Access Token was unexpectedly null:
+                - response: {accessTokenResponse}");
+
+            throw new Exception("Unable to acquire Google Access token");
+        }
+        
+        _accessToken = accessTokenResponse.AccessToken;
+        _accessTokenExpirationDate = DateTime.UtcNow.AddSeconds((accessTokenResponse.ExpiresIn ?? 0) - 60);
+
+        return _accessToken;
     }
+
+    // private async Task<string> GetOidcToken(string audience) //TODO: store in private variable for reuse - requires decoding to find expiration
+    // {
+    //     using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
+
+    //     var oidcTokenResponse = await httpClient.GetStringAsync(
+    //         requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/identity?audience={Uri.EscapeDataString(audience)}"
+    //     );
+
+    //     if (string.IsNullOrWhiteSpace(oidcTokenResponse))
+    //     {
+    //         _logger.LogError(@$"Google Oidc Token was unexpectedly null:
+    //             - response: {oidcTokenResponse}");
+
+    //         throw new Exception("Unable to acquire Google Oidc token");
+    //     }
+
+    //     return oidcTokenResponse;
+    // }
 }
