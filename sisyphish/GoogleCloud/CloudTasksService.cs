@@ -34,14 +34,14 @@ public class CloudTasksService : ICloudTasksService
                     HttpMethod = "POST",
                     Url = url,
                     Body = encodedBody,
-                    AuthorizationHeader = new GoogleCloudAuthorizationHeader
-                    {
+                    //AuthorizationHeader = new GoogleCloudAuthorizationHeader
+                    //{
                         OidcToken = new GoogleCloudOidcToken
                         {
                             ServiceAccountEmail = Config.GoogleServiceAccount,
                             Audience = url
                         }
-                    }
+                    //}
                 }
             }
         };

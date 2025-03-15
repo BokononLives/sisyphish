@@ -1,9 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Diagnostics.Common;
 using Google.Cloud.Firestore;
-using Google.Cloud.Tasks.V2;
 using sisyphish;
 using sisyphish.Controllers;
 using sisyphish.Discord;
@@ -37,7 +35,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GoogleProjectId));
 
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
@@ -111,12 +108,6 @@ app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController c
 
     return Results.Ok();
 }).AddEndpointFilter<GoogleCloudFilter>();
-
-if (Config.IsDevelopment)
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
