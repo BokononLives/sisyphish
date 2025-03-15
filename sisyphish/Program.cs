@@ -65,7 +65,7 @@ app.MapGet("/", (HomeController controller) =>
 
 app.MapPost("/", async (HttpContext context, HomeController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
+    var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
@@ -78,7 +78,7 @@ app.MapPost("/", async (HttpContext context, HomeController controller) =>
 
 app.MapPost("sisyphish/fish", async (HttpContext context, SisyphishController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
+    var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
@@ -91,7 +91,7 @@ app.MapPost("sisyphish/fish", async (HttpContext context, SisyphishController co
 
 app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
+    var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
@@ -104,7 +104,7 @@ app.MapPost("sisyphish/event", async (HttpContext context, SisyphishController c
 
 app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController controller) =>
 {
-    var interaction = await context.Request.ReadFromJsonAsync(SisyphishJsonContext.Default.DiscordInteraction);
+    var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
     if (interaction == null)
     {
         return Results.BadRequest("Invalid request");
