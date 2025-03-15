@@ -10,7 +10,7 @@ namespace sisyphish;
 [JsonSerializable(typeof(GoogleCloudTaskRequest))]
 [JsonSerializable(typeof(GoogleCloudTask))]
 [JsonSerializable(typeof(GoogleCloudHttpRequest))]
-[JsonSerializable(typeof(GoogleCloudAuthorizationHeader))]
+//[JsonSerializable(typeof(GoogleCloudAuthorizationHeader))]
 [JsonSerializable(typeof(GoogleCloudOidcToken))]
 internal partial class CamelCaseJsonContext : JsonSerializerContext
 {
