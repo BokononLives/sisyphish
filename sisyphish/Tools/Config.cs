@@ -1,3 +1,5 @@
+namespace sisyphish.Tools;
+
 public class Config
 {
     public static string BaseUrl => IsDevelopment ? "http://localhost" : "http://0.0.0.0";

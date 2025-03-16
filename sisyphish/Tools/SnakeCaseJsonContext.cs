@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud.Models;
 
-namespace sisyphish;
+namespace sisyphish.Tools;
 
 [JsonSourceGenerationOptions(
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
