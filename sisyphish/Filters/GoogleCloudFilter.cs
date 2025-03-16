@@ -66,15 +66,13 @@ public class GoogleCloudFilter : IEndpointFilter
 
                 return Results.Unauthorized();
             }
-
-            return await next(context);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Validation failed");
         }
-
-        return Results.Unauthorized();
+        
+        return await next(context);
     }
 
     private static async Task<IEnumerable<SecurityKey>> GetGooglePublicKeys()
