@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 using Microsoft.IdentityModel.Tokens;
 
 namespace sisyphish.Filters;
@@ -33,7 +34,23 @@ public class GoogleCloudFilter : IEndpointFilter
                 ValidateIssuer = true,
                 ValidIssuers = ["accounts.google.com", "https://accounts.google.com"],
                 ValidateAudience = true,
-                ValidAudience = context.HttpContext.Request.GetEncodedUrl(),
+                ValidAudiences = [
+                    new UriBuilder
+                    {
+                        Scheme = "http",
+                        Host = context.HttpContext.Request.Host.Host,
+                        Port = context.HttpContext.Request.Host.Port ?? -1,
+                        Path = context.HttpContext.Request.Path,
+                        Query = context.HttpContext.Request.QueryString.ToUriComponent()
+                    }.ToString(),
+                    new UriBuilder
+                    {
+                        Scheme = "https",
+                        Host = context.HttpContext.Request.Host.Host,
+                        Port = context.HttpContext.Request.Host.Port ?? -1,
+                        Path = context.HttpContext.Request.Path,
+                        Query = context.HttpContext.Request.QueryString.ToUriComponent()
+                    }.ToString()],
                 ValidateLifetime = true,
                 IssuerSigningKeys = keys
             };
