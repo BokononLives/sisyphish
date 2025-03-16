@@ -6,6 +6,13 @@ namespace sisyphish.Filters;
 
 public class GoogleCloudFilter : IEndpointFilter
 {
+    private readonly ILogger<GoogleCloudFilter> _logger;
+
+    public GoogleCloudFilter(ILogger<GoogleCloudFilter> logger)
+    {
+        _logger = logger;
+    }
+
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         try
@@ -39,11 +46,16 @@ public class GoogleCloudFilter : IEndpointFilter
 
             if (!emailAddress.Equals(Config.GoogleServiceAccount))
             {
+                _logger.LogInformation(@$"Validation failed:
+                    - token email address: {emailAddress}");
+                
                 return Results.Unauthorized();
             }
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Validation failed");
+            
             return Results.Unauthorized();
         }
 
