@@ -59,7 +59,7 @@ public class GoogleCloudFilter : IEndpointFilter
             var token = (JwtSecurityToken)validatedToken;
             var emailAddress = token.Claims.First(c => c.Type == "email");
 
-            if (!string.Equals(emailAddress.Value, Config.GoogleServiceAccount, StringComparison.InvariantCultureIgnoreCase))
+            if (!emailAddress.Value.Equals(Config.GoogleServiceAccount))
             {
                 _logger.LogInformation(@$"Validation failed:
                     - token email address: {emailAddress}");
@@ -67,7 +67,7 @@ public class GoogleCloudFilter : IEndpointFilter
                 return Results.Unauthorized();
             }
 
-            await next(context);
+            return await next(context);
         }
         catch (Exception ex)
         {
