@@ -1,5 +1,6 @@
 using System.Text;
 using NSec.Cryptography;
+using sisyphish.Tools;
 
 namespace sisyphish.Filters;
 

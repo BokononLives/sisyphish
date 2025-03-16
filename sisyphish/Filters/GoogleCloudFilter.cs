@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using sisyphish.Tools;
 
 namespace sisyphish.Filters;
 
