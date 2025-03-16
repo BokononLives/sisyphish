@@ -65,18 +65,18 @@ public class GoogleCloudFilter : IEndpointFilter
             {
                 _logger.LogInformation(@$"Validation failed:
                     - token email address: {emailAddress}");
-                
+
                 return Results.Unauthorized();
             }
+
+            await next(context);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Validation failed");
-            
-            return Results.Unauthorized();
         }
 
-        return await next(context);
+        return Results.Unauthorized();
     }
 
     private static async Task<IEnumerable<SecurityKey>> GetGooglePublicKeys()
