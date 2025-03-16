@@ -20,7 +20,6 @@ public class CloudTasksService : ICloudTasksService
     public async Task CreateHttpPostTask(string url, DiscordInteraction body)
     {
         var accessToken = await GetAccessToken();
-        //var oidcToken = await GetOidcToken(url);
 
         var serializedBody = JsonSerializer.Serialize(body, SnakeCaseJsonContext.Default.DiscordInteraction);
         var encodedBody = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedBody));
@@ -34,14 +33,11 @@ public class CloudTasksService : ICloudTasksService
                     HttpMethod = "POST",
                     Url = url,
                     Body = encodedBody,
-                    //AuthorizationHeader = new GoogleCloudAuthorizationHeader
-                    //{
-                        OidcToken = new GoogleCloudOidcToken
-                        {
-                            ServiceAccountEmail = Config.GoogleServiceAccount,
-                            Audience = url
-                        }
-                    //}
+                    OidcToken = new GoogleCloudOidcToken
+                    {
+                        ServiceAccountEmail = Config.GoogleServiceAccount,
+                        Audience = url
+                    }
                 }
             }
         };
@@ -89,23 +85,4 @@ public class CloudTasksService : ICloudTasksService
 
         return _accessToken;
     }
-
-    // private async Task<string> GetOidcToken(string audience) //TODO: store in private variable for reuse - requires decoding to find expiration
-    // {
-    //     using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
-
-    //     var oidcTokenResponse = await httpClient.GetStringAsync(
-    //         requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/identity?audience={Uri.EscapeDataString(audience)}"
-    //     );
-
-    //     if (string.IsNullOrWhiteSpace(oidcTokenResponse))
-    //     {
-    //         _logger.LogError(@$"Google Oidc Token was unexpectedly null:
-    //             - response: {oidcTokenResponse}");
-
-    //         throw new Exception("Unable to acquire Google Oidc token");
-    //     }
-
-    //     return oidcTokenResponse;
-    // }
 }

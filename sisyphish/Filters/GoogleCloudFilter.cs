@@ -1,6 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 using Microsoft.IdentityModel.Tokens;
 
 namespace sisyphish.Filters;
