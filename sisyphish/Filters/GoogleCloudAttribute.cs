@@ -61,7 +61,7 @@ public class GoogleCloudFilter : IEndpointFilter
             var token = (JwtSecurityToken)validatedToken;
             var emailAddress = token.Claims.First(c => c.Type == "email");
 
-            if (!emailAddress.Equals(Config.GoogleServiceAccount))
+            if (!string.Equals(emailAddress.Value, Config.GoogleServiceAccount, StringComparison.InvariantCultureIgnoreCase))
             {
                 _logger.LogInformation(@$"Validation failed:
                     - token email address: {emailAddress}");
