@@ -33,6 +33,10 @@ public class CloudTasksService : ICloudTasksService
                     HttpMethod = "POST",
                     Url = url,
                     Body = encodedBody,
+                    Headers = new Dictionary<string, string>
+                    {
+                        { "Content-Type", "application/json" }
+                    },
                     OidcToken = new GoogleCloudOidcToken
                     {
                         ServiceAccountEmail = Config.GoogleServiceAccount,
