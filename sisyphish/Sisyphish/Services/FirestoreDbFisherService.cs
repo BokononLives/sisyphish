@@ -1,4 +1,3 @@
-using Grpc.Core;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
 using sisyphish.GoogleCloud.Firestore;
@@ -54,15 +53,8 @@ public class FirestoreDbFisherService : IFisherService
             }
             else
             {
-                try
-                {
-                    await LockFisher(fisher);
-                    result.InitSuccess = true;
-                }
-                catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
-                {
-                    _logger.LogInformation($"Failed to lock fisher - {interaction.UserId}");
-                }
+                await LockFisher(fisher);
+                result.InitSuccess = true;
             }
 
             return result;
