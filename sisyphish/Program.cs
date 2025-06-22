@@ -5,6 +5,7 @@ using sisyphish.Discord;
 using sisyphish.Extensions;
 using sisyphish.Filters;
 using sisyphish.GoogleCloud.CloudTasks;
+using sisyphish.GoogleCloud.Firestore;
 using sisyphish.Sisyphish.Processors;
 using sisyphish.Sisyphish.Services;
 using sisyphish.Tools;
@@ -27,6 +28,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
+builder.Services.AddScoped<IFirestoreService, FirestoreService>();
 builder.Services.AddScoped<DiscordFilter>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
 builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
