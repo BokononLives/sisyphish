@@ -1,33 +1,37 @@
-using Google.Cloud.Firestore;
 using Grpc.Core;
 using sisyphish.Discord.Models;
+using sisyphish.Extensions;
+using sisyphish.GoogleCloud.Firestore;
 using sisyphish.Sisyphish.Models;
 
 namespace sisyphish.Sisyphish.Services;
 
 public class FirestoreDbFisherService : IFisherService
 {
-    private readonly FirestoreDb _firestoreDb;
+    private const string DocumentType = "fishers";
+
+    private readonly IFirestoreService _firestore;
     private readonly ILogger<FirestoreDbFisherService> _logger;
 
-    public FirestoreDbFisherService(FirestoreDb firestoreDb, ILogger<FirestoreDbFisherService> logger)
+    public FirestoreDbFisherService(IFirestoreService firestore, ILogger<FirestoreDbFisherService> logger)
     {
-        _firestoreDb = firestoreDb;
+        _firestore = firestore;
         _logger = logger;
     }
 
     public async Task DeleteFisher(DiscordInteraction interaction)
     {
-        var documents = await _firestoreDb.Collection("fishers")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .Limit(1)
-            .GetSnapshotAsync();
+        var fisher = await GetFisher(interaction);
 
-        var document = documents.SingleOrDefault();
-
-        if (document != null)
+        if (fisher != null)
         {
-            await document.Reference.DeleteAsync();
+            var deleteRequest = new DeleteFirestoreDocumentRequest
+            {
+                DocumentId = fisher.Id,
+                DocumentType = DocumentType
+            };
+
+            await _firestore.DeleteDocument(deleteRequest);
         }
     }
 
@@ -70,24 +74,86 @@ public class FirestoreDbFisherService : IFisherService
             return new InitFisherResult();
         }
     }
-    
+
     public async Task<Fisher?> GetFisher(DiscordInteraction interaction)
     {
-        var documents = await _firestoreDb.Collection("fishers")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .Limit(1)
-            .GetSnapshotAsync();
-
-        var document = documents.SingleOrDefault();
+        var document = await _firestore.GetDocumentByField(DocumentType, "discord_user_id", interaction.UserId);
         if (document == null)
         {
             return null;
         }
 
-        var fisher = document.ConvertTo<Fisher>();
-        fisher.Id = document.Id;
-        fisher.LastUpdated = document.UpdateTime?.ToDateTime();
+        var fisher = DeserializeFisher(document);
         return fisher;
+    }
+
+    private static Fisher? DeserializeFisher(GoogleCloudFirestoreDocument? document)
+    {
+        if (document == null)
+        {
+            return null;
+        }
+
+        var fisher = new Fisher
+        {
+            Id = document.Id,
+            LastUpdated = GoogleCloudFirestoreDocument.ParseDateTime(document.UpdateTime),
+            CreatedAt = GoogleCloudFirestoreDocument.ParseDateTime(document.CreateTime),
+            DiscordUserId = document.GetString("discord_user_id"),
+            FishCaught = document.GetLong("fish_caught"),
+            BiggestFish = document.GetLong("biggest_fish"),
+            LockedAt = document.GetTimestamp("locked_at"),
+            Fish = document.GetList("fish")
+                .Select(fishDoc => new Fish
+                {
+                    Type = fishDoc.GetEnum<FishType>("type"),
+                    Count = fishDoc.GetLong("count")
+                })
+                .ToList(),
+            Items = document.GetList("items")
+                .Select(itemDoc => new Item
+                {
+                    Type = itemDoc.GetEnum<ItemType>("type"),
+                    Count = itemDoc.GetLong("count")
+                })
+                .ToList()
+        };
+
+        return fisher;
+    }
+
+    private static Dictionary<string, GoogleCloudFirestoreValue>? SerializeFisherFields(Fisher? fisher)
+    {
+        if (fisher == null)
+        {
+            return null;
+        }
+
+        var fields = new Dictionary<string, GoogleCloudFirestoreValue>()
+            .AddIfNotNull("discord_user_id", fisher.DiscordUserId)
+            .AddIfNotNull("fish_caught", fisher.FishCaught)
+            .AddIfNotNull("biggest_fish", fisher.BiggestFish)
+            .AddIfNotNull("locked_at", fisher.LockedAt)
+            .AddIfNotNull("fish", fisher.Fish, fish => new GoogleCloudFirestoreValue
+            {
+                MapValue = new GoogleCloudFirestoreMapValue
+                {
+                    Fields = new Dictionary<string, GoogleCloudFirestoreValue>()
+                        .AddIfNotNull("type", fish.Type.ToString())
+                        .AddIfNotNull("count", fish.Count)
+                }
+            })
+            .AddIfNotNull("items", fisher.Items, item => new GoogleCloudFirestoreValue
+            {
+                MapValue = new GoogleCloudFirestoreMapValue
+                {
+                    Fields = new Dictionary<string, GoogleCloudFirestoreValue>()
+                        .AddIfNotNull("type", item.Type.ToString())
+                        .AddIfNotNull("count", item.Count)
+                }
+            });
+
+        return fields;
     }
 
     public async Task<Fisher?> CreateFisher(DiscordInteraction interaction)
@@ -100,39 +166,59 @@ public class FirestoreDbFisherService : IFisherService
             BiggestFish = 0
         };
 
-        var docRef = await _firestoreDb.Collection("fishers").AddAsync(fisher);
-        var document = await docRef.GetSnapshotAsync();
+        var createRequest = new CreateFirestoreDocumentRequest
+        {
+            DocumentType = DocumentType,
+            Fields = SerializeFisherFields(fisher)!
+        };
 
-        fisher.Id = document.Id;
-        fisher.LastUpdated = document.UpdateTime?.ToDateTime();
+        var createResponse = await _firestore.CreateDocument(createRequest);
+
+        fisher.Id = createResponse?.Id;
+        fisher.LastUpdated = GoogleCloudFirestoreDocument.ParseDateTime(createResponse?.UpdateTime);
 
         return fisher;
     }
 
     public async Task LockFisher(Fisher fisher)
     {
-        await _firestoreDb.Collection("fishers")
-            .Document(fisher.Id)
-            .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(fisher.LastUpdated!.Value)));
+        fisher.LockedAt = DateTime.UtcNow;
+
+        var updateRequest = new UpdateFirestoreDocumentRequest
+        {
+            DocumentId = fisher.Id!,
+            DocumentType = DocumentType,
+            Fields = SerializeFisherFields(fisher)!,
+            CurrentDocument = new UpdateFirestoreDocumentPrecondition
+            {
+                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+            }
+        };
+
+        await _firestore.UpdateDocument(updateRequest);
     }
 
     public async Task UnlockFisher(Fisher? fisher)
     {
-        try
+        if (fisher == null)
         {
-            if (fisher == null)
+            return;
+        }
+
+        fisher.LockedAt = null;
+
+        var updateRequest = new UpdateFirestoreDocumentRequest
+        {
+            DocumentId = fisher.Id!,
+            DocumentType = DocumentType,
+            Fields = SerializeFisherFields(fisher)!,
+            CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                return;
+                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
             }
-            
-            await _firestoreDb.Collection("fishers")
-                .Document(fisher.Id)
-                .UpdateAsync("locked_at", null);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error unlocking fisher");
-        }
+        };
+
+        await _firestore.UpdateDocument(updateRequest);
     }
 
     public async Task AddFish(Fisher fisher, FishType fishType, long fishSize)
@@ -149,14 +235,22 @@ public class FirestoreDbFisherService : IFisherService
             fishes.Add(new Fish { Type = fishType, Count = 1 });
         }
 
-        await _firestoreDb.Collection("fishers")
-            .Document(fisher.Id)
-            .UpdateAsync(new Dictionary<string, object>
+        fisher.FishCaught++;
+        fisher.BiggestFish = Math.Max(fisher.BiggestFish ?? 0, fishSize);
+        fisher.Fish = fishes;
+
+        var updateRequest = new UpdateFirestoreDocumentRequest
+        {
+            DocumentId = fisher.Id!,
+            DocumentType = DocumentType,
+            Fields = SerializeFisherFields(fisher)!,
+            CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                { "fish_caught", FieldValue.Increment(1) },
-                { "biggest_fish", Math.Max(fisher.BiggestFish ?? 0, fishSize) },
-                { "fish", fishes }
-            });
+                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+            }
+        };
+
+        await _firestore.UpdateDocument(updateRequest);
     }
 
     public async Task AddItem(Fisher fisher, ItemType itemType)
@@ -173,110 +267,19 @@ public class FirestoreDbFisherService : IFisherService
             items.Add(new Item { Type = itemType, Count = 1 });
         }
 
-        await _firestoreDb.Collection("fishers")
-            .Document(fisher.Id)
-            .UpdateAsync("items", items);
-    }
+        fisher.Items = items;
 
-    public async Task CreatePrompt(DiscordInteraction interaction, Expedition expedition)
-    {
-        var prompt = new Prompt
+        var updateRequest = new UpdateFirestoreDocumentRequest
         {
-            CreatedAt = DateTime.UtcNow,
-            DiscordUserId = interaction.UserId,
-            DiscordPromptId = expedition.PromptId,
-            Event = expedition.Event
+            DocumentId = fisher.Id!,
+            DocumentType = DocumentType,
+            Fields = SerializeFisherFields(fisher)!,
+            CurrentDocument = new UpdateFirestoreDocumentPrecondition
+            {
+                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+            }
         };
 
-        await _firestoreDb.Collection("prompts").AddAsync(prompt);
-    }
-
-    public async Task<InitPromptResult?> InitPrompt(DiscordInteraction interaction)
-    {
-        try
-        {
-            var result = new InitPromptResult();
-
-            var prompt = await GetPrompt(interaction);
-            result.Prompt = prompt;
-
-            if (prompt == null)
-            {
-                _logger.LogWarning($"Prompt was unexpectedly null - {interaction.Data?.CustomId}");
-            }
-            else if (prompt.IsLocked)
-            {
-                _logger.LogInformation($"Prompt was locked - {interaction.PromptId}");
-            }
-            else
-            {
-                try
-                {
-                    await LockPrompt(prompt);
-                    result.InitSuccess = true;
-                }
-                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
-                {
-                    _logger.LogInformation($"Failed to lock prompt - {interaction.PromptId}");
-                }
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error initializing prompt");
-
-            return new InitPromptResult();
-        }
-    }
-
-    public async Task<Prompt?> GetPrompt(DiscordInteraction interaction)
-    {
-        if (string.IsNullOrWhiteSpace(interaction.PromptId))
-        {
-            return null;
-        }
-
-        var documents = await _firestoreDb.Collection("prompts")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .WhereEqualTo("discord_prompt_id", interaction.PromptId)
-            .Limit(1)
-            .GetSnapshotAsync();
-
-        var document = documents.SingleOrDefault();
-        if (document == null)
-        {
-            return null;
-        }
-
-        var prompt = document.ConvertTo<Prompt>();
-        prompt.Id = document.Id;
-        prompt.LastUpdated = document.UpdateTime?.ToDateTime();
-        return prompt;
-    }
-
-    public async Task LockPrompt(Prompt prompt)
-    {
-        await _firestoreDb.Collection("prompts")
-            .Document(prompt.Id)
-            .UpdateAsync("locked_at", DateTime.UtcNow, Precondition.LastUpdated(Timestamp.FromDateTime(prompt.LastUpdated!.Value)));
-    }
-
-    public async Task DeletePrompt(DiscordInteraction interaction)
-    {
-
-        var documents = await _firestoreDb.Collection("prompts")
-            .WhereEqualTo("discord_user_id", interaction.UserId)
-            .WhereEqualTo("discord_prompt_id", interaction.PromptId)
-            .Limit(1)
-            .GetSnapshotAsync();
-        
-        var document = documents.SingleOrDefault();
-
-        if (document != null)
-        {
-            await document.Reference.DeleteAsync();
-        }
+        await _firestore.UpdateDocument(updateRequest);
     }
 }

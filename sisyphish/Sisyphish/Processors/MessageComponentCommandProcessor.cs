@@ -1,6 +1,6 @@
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
-using sisyphish.GoogleCloud;
+using sisyphish.GoogleCloud.CloudTasks;
 using sisyphish.Sisyphish.Models;
 using sisyphish.Sisyphish.Services;
 using sisyphish.Tools;
@@ -12,13 +12,15 @@ public class MessageComponentCommandProcessor : ICommandProcessor
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
     private readonly IFisherService _fisherService;
+    private readonly IPromptService _promptService;
     private readonly ILogger<MessageComponentCommandProcessor> _logger;
 
-    public MessageComponentCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IFisherService fisherService, ILogger<MessageComponentCommandProcessor> logger)
+    public MessageComponentCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IFisherService fisherService, IPromptService promptService, ILogger<MessageComponentCommandProcessor> logger)
     {
         _cloudTasks = cloudTasks;
         _discord = discord;
         _fisherService = fisherService;
+        _promptService = promptService;
         _logger = logger;
     }
 
@@ -52,7 +54,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
         var initFisherResult = await _fisherService.InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
         
-        var initPromptResult = await _fisherService.InitPrompt(interaction);
+        var initPromptResult = await _promptService.InitPrompt(interaction);
         var prompt = initPromptResult?.Prompt;
 
         try
@@ -82,7 +84,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
                             await _discord.EditResponse(interaction, content, []);
                         }
 
-                        await _fisherService.DeletePrompt(interaction);
+                        await _promptService.DeletePrompt(interaction);
 
                         break;
                         
@@ -105,7 +107,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
                             await _discord.EditResponse(interaction, content, []);
                         }
                         
-                        await _fisherService.DeletePrompt(interaction);
+                        await _promptService.DeletePrompt(interaction);
                         
                         break;
                     default:

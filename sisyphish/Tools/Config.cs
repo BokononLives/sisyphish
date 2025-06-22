@@ -8,6 +8,7 @@ public class Config
     public static string DiscordPublicKey => GetValue("DISCORD_PUBLIC_KEY");
     public static string DiscordToken => GetValue("DISCORD_TOKEN");
     public static string GoogleCertsBaseUrl => "https://www.googleapis.com/oauth2/v3/certs";
+    public static string GoogleFirestoreBaseUrl => $"https://firestore.googleapis.com/v1/projects/{GoogleProjectId}";
     public static string GoogleLocation => "us-central1";
     public static string GoogleMetadataBaseUrl => "http://metadata";
     public static string GoogleProjectId => GetValue("GOOGLE_PROJECT_ID");

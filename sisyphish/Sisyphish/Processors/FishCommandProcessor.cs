@@ -1,6 +1,6 @@
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
-using sisyphish.GoogleCloud;
+using sisyphish.GoogleCloud.CloudTasks;
 using sisyphish.Sisyphish.Models;
 using sisyphish.Sisyphish.Services;
 using sisyphish.Tools;
@@ -12,13 +12,15 @@ public class FishCommandProcessor : ICommandProcessor
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
     private readonly IFisherService _fisherService;
+    private readonly IPromptService _promptService;
     private readonly ILogger<FishCommandProcessor> _logger;
 
-    public FishCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IFisherService fisherService, ILogger<FishCommandProcessor> logger)
+    public FishCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IFisherService fisherService, IPromptService promptService, ILogger<FishCommandProcessor> logger)
     {
         _cloudTasks = cloudTasks;
         _discord = discord;
         _fisherService = fisherService;
+        _promptService = promptService;
         _logger = logger;
     }
 
@@ -70,7 +72,7 @@ public class FishCommandProcessor : ICommandProcessor
                     switch (expedition.Event)
                     {
                         case Event.FoundTreasureChest:
-                            await _fisherService.CreatePrompt(interaction, expedition);
+                            await _promptService.CreatePrompt(interaction, expedition);
                             break;
                         default:
                             break;

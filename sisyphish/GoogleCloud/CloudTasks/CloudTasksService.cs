@@ -1,10 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using sisyphish.Discord.Models;
-using sisyphish.GoogleCloud.Models;
 using sisyphish.Tools;
 
-namespace sisyphish.GoogleCloud;
+namespace sisyphish.GoogleCloud.CloudTasks;
 
 public class CloudTasksService : ICloudTasksService
 {
