@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Google.Cloud.Diagnostics.Common;
 using sisyphish.Controllers;
 using sisyphish.Discord;
 using sisyphish.Extensions;
@@ -15,12 +14,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthorization();
 
 builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
-
-builder.Logging.AddGoogle(new LoggingServiceOptions
-{
-    ProjectId = Config.GoogleProjectId,
-    Options = LoggingOptions.Create(logLevel: LogLevel.Debug)
-});
 
 var setUpJsonSerializerOptions = (JsonSerializerOptions options) =>
 {
