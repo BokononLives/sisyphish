@@ -26,8 +26,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     setUpJsonSerializerOptions(options.SerializerOptions);
 });
 
-builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordFilter>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
