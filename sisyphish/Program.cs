@@ -1,13 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Google.Cloud.Diagnostics.Common;
-using Google.Cloud.Firestore;
-using sisyphish;
 using sisyphish.Controllers;
 using sisyphish.Discord;
 using sisyphish.Extensions;
 using sisyphish.Filters;
-using sisyphish.GoogleCloud;
+using sisyphish.GoogleCloud.CloudTasks;
 using sisyphish.Sisyphish.Processors;
 using sisyphish.Sisyphish.Services;
 using sisyphish.Tools;
@@ -36,17 +34,17 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped(serviceProvider => FirestoreDb.Create(Config.GoogleProjectId));
 
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<DiscordFilter>();
 builder.Services.AddScoped<IDiscordService, DiscordService>();
 builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
+builder.Services.AddScoped<IPromptService, FirestoreDbPromptService>();
 builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
 [
-    new FishCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>(), x.GetRequiredService<ILogger<FishCommandProcessor>>()),
-    new MessageComponentCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>(), x.GetRequiredService<ILogger<MessageComponentCommandProcessor>>()),
-    new ResetCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>())
+    new FishCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>(), x.GetRequiredService<IPromptService>(), x.GetRequiredService<ILogger<FishCommandProcessor>>()),
+    new MessageComponentCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IFisherService>(), x.GetRequiredService<IPromptService>(), x.GetRequiredService<ILogger<MessageComponentCommandProcessor>>()),
+    new ResetCommandProcessor(x.GetRequiredService<ICloudTasksService>(), x.GetRequiredService<IDiscordService>(), x.GetRequiredService<IPromptService>())
 ]);
 builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();

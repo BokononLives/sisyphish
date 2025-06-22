@@ -1,6 +1,6 @@
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
-using sisyphish.GoogleCloud;
+using sisyphish.GoogleCloud.CloudTasks;
 using sisyphish.Sisyphish.Models;
 using sisyphish.Sisyphish.Services;
 using sisyphish.Tools;
@@ -11,13 +11,13 @@ public class ResetCommandProcessor : ICommandProcessor
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
-    private readonly IFisherService _fisherService;
+    private readonly IPromptService _promptService;
 
-    public ResetCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IFisherService fisherService)
+    public ResetCommandProcessor(ICloudTasksService cloudTasks, IDiscordService discord, IPromptService promptService)
     {
         _cloudTasks = cloudTasks;
         _discord = discord;
-        _fisherService = fisherService;
+        _promptService = promptService;
     }
 
     public DiscordCommandName? Command => DiscordCommandName.Reset;
@@ -38,7 +38,7 @@ public class ResetCommandProcessor : ICommandProcessor
             Event = Event.ResetData
         };
 
-        await _fisherService.CreatePrompt(interaction, expedition);
+        await _promptService.CreatePrompt(interaction, expedition);
 
         var content = expedition.GetContent();
         var components = expedition.GetComponents();

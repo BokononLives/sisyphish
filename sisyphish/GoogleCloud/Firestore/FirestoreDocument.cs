@@ -1,4 +1,4 @@
-namespace sisyphish.GoogleCloud;
+namespace sisyphish.GoogleCloud.Firestore;
 
 public abstract class FirestoreDocument
 {

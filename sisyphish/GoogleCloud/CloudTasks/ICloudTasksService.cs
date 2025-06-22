@@ -1,6 +1,6 @@
 using sisyphish.Discord.Models;
 
-namespace sisyphish.GoogleCloud;
+namespace sisyphish.GoogleCloud.CloudTasks;
 
 public interface ICloudTasksService
 {

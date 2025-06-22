@@ -1,4 +1,4 @@
-namespace sisyphish.GoogleCloud.Models;
+namespace sisyphish.GoogleCloud.CloudTasks;
 
 public class GoogleCloudTaskRequest
 {
