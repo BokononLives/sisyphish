@@ -1,4 +1,3 @@
-using Grpc.Core;
 using sisyphish.Discord.Models;
 using sisyphish.Extensions;
 using sisyphish.GoogleCloud.Firestore;
@@ -99,15 +98,8 @@ public class FirestoreDbPromptService : IPromptService
             }
             else
             {
-                try
-                {
-                    await LockPrompt(prompt);
-                    result.InitSuccess = true;
-                }
-                catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.FailedPrecondition)
-                {
-                    _logger.LogInformation($"Failed to lock prompt - {interaction.PromptId}");
-                }
+                await LockPrompt(prompt);
+                result.InitSuccess = true;
             }
 
             return result;
