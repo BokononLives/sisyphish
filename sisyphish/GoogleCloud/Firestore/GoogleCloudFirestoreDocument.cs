@@ -9,7 +9,7 @@ public class GoogleCloudFirestoreDocument
     public string? Id => Name?.Split('/')[^1];
 
     public string? GetString(string key) => Fields.TryGetValue(key, out var value) ? value.StringValue : null;
-    public long? GetLong(string key) => Fields.TryGetValue(key, out var value) ? value.IntegerValue : null;
+    public long? GetLong(string key) => Fields.TryGetValue(key, out var value) ? long.TryParse(value.IntegerValue, out var result) ? result : null : null;
     public DateTime? GetTimestamp(string key) => ParseDateTime(Fields.TryGetValue(key, out var value) ? value.TimestampValue : null);
     
     public T? GetEnum<T>(string key) where T : struct, Enum
@@ -52,7 +52,7 @@ public class GoogleCloudFirestoreDocument
 public class GoogleCloudFirestoreValue
 {
     public string? StringValue { get; set; }
-    public long? IntegerValue { get; set; }
+    public string? IntegerValue { get; set; }
     public bool? BooleanValue { get; set; }
     public double? DoubleValue { get; set; }
     public string? TimestampValue { get; set; }

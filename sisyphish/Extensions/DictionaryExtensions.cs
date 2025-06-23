@@ -18,7 +18,7 @@ public static class DictionaryExtensions
     {
         if (fields != null && key != null && value != null)
         {
-            fields.Add(key, new GoogleCloudFirestoreValue { IntegerValue = value });
+            fields.Add(key, new GoogleCloudFirestoreValue { IntegerValue = value.ToString() });
         }
 
         return fields;
