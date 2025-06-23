@@ -144,7 +144,9 @@ public class FirestoreDbPromptService : IPromptService
             }
         };
 
-        await _firestore.UpdateDocument(updateRequest);
+        var updateResponse = await _firestore.UpdateDocument(updateRequest);
+
+        prompt.LastUpdated = updateResponse?.UpdateTime;
     }
 
     public async Task DeletePrompt(DiscordInteraction interaction)
