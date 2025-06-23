@@ -1,3 +1,4 @@
+using System.Text;
 using sisyphish.Tools;
 
 namespace sisyphish.GoogleCloud.Firestore;
@@ -159,8 +160,15 @@ public class FirestoreService : IFirestoreService
     {
         using var httpClient = await GetBaseHttpClient();
 
+        var queryString = new StringBuilder();
+
+        if (request.CurrentDocument?.UpdateTime != null)
+        {
+            queryString.Append($"currentDocument.updateTime={request.CurrentDocument.UpdateTime}");
+        }
+
         var httpResponse = await httpClient.PatchAsJsonAsync(
-            requestUri: $"{Config.GoogleFirestoreBaseUrl}/databases/(default)/documents/{request.DocumentType}/{request.DocumentId}?updateMask.fieldPaths=*",
+            requestUri: $"{Config.GoogleFirestoreBaseUrl}/databases/(default)/documents/{request.DocumentType}/{request.DocumentId}?{queryString}",
             value: request,
             jsonTypeInfo: CamelCaseJsonContext.Default.UpdateFirestoreDocumentRequest
         );
