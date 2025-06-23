@@ -165,7 +165,15 @@ public class FirestoreService : IFirestoreService
             jsonTypeInfo: CamelCaseJsonContext.Default.UpdateFirestoreDocumentRequest
         );
 
-        httpResponse.EnsureSuccessStatusCode();
+        try
+        {
+            httpResponse.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            var foo = await httpResponse.Content.ReadAsStringAsync();
+            _logger.LogError(ex, foo ?? "unknown error");
+        }
 
         var document = await httpResponse.Content.ReadFromJsonAsync(CamelCaseJsonContext.Default.GoogleCloudFirestoreDocument);
 
