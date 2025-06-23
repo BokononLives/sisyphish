@@ -187,7 +187,9 @@ public class FirestoreDbFisherService : IFisherService
             }
         };
 
-        await _firestore.UpdateDocument(updateRequest);
+        var updateResponse = await _firestore.UpdateDocument(updateRequest);
+
+        fisher.LastUpdated = updateResponse?.UpdateTime;
     }
 
     public async Task UnlockFisher(Fisher? fisher)
@@ -210,7 +212,9 @@ public class FirestoreDbFisherService : IFisherService
             }
         };
 
-        await _firestore.UpdateDocument(updateRequest);
+        var updateResponse = await _firestore.UpdateDocument(updateRequest);
+
+        fisher.LastUpdated = updateResponse?.UpdateTime;
     }
 
     public async Task AddFish(Fisher fisher, FishType fishType, long fishSize)
@@ -242,7 +246,9 @@ public class FirestoreDbFisherService : IFisherService
             }
         };
 
-        await _firestore.UpdateDocument(updateRequest);
+        var updateResponse = await _firestore.UpdateDocument(updateRequest);
+
+        fisher.LastUpdated = updateResponse?.UpdateTime;
     }
 
     public async Task AddItem(Fisher fisher, ItemType itemType)
@@ -272,6 +278,8 @@ public class FirestoreDbFisherService : IFisherService
             }
         };
 
-        await _firestore.UpdateDocument(updateRequest);
+        var updateResponse = await _firestore.UpdateDocument(updateRequest);
+
+        fisher.LastUpdated = updateResponse?.UpdateTime;
     }
 }
