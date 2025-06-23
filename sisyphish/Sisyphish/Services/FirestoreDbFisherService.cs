@@ -89,7 +89,7 @@ public class FirestoreDbFisherService : IFisherService
         var fisher = new Fisher
         {
             Id = document.Id,
-            LastUpdated = GoogleCloudFirestoreDocument.ParseDateTime(document.UpdateTime),
+            LastUpdated = document.UpdateTime,
             CreatedAt = GoogleCloudFirestoreDocument.ParseDateTime(document.CreateTime),
             DiscordUserId = document.GetString("discord_user_id"),
             FishCaught = document.GetLong("fish_caught"),
@@ -167,7 +167,7 @@ public class FirestoreDbFisherService : IFisherService
         var createResponse = await _firestore.CreateDocument(createRequest);
 
         fisher.Id = createResponse?.Id;
-        fisher.LastUpdated = GoogleCloudFirestoreDocument.ParseDateTime(createResponse?.UpdateTime);
+        fisher.LastUpdated = createResponse?.UpdateTime;
 
         return fisher;
     }
@@ -183,7 +183,7 @@ public class FirestoreDbFisherService : IFisherService
             Fields = SerializeFisherFields(fisher)!,
             CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+                UpdateTime = fisher.LastUpdated
             }
         };
 
@@ -206,7 +206,7 @@ public class FirestoreDbFisherService : IFisherService
             Fields = SerializeFisherFields(fisher)!,
             CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+                UpdateTime = fisher.LastUpdated
             }
         };
 
@@ -238,7 +238,7 @@ public class FirestoreDbFisherService : IFisherService
             Fields = SerializeFisherFields(fisher)!,
             CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+                UpdateTime = fisher.LastUpdated
             }
         };
 
@@ -268,7 +268,7 @@ public class FirestoreDbFisherService : IFisherService
             Fields = SerializeFisherFields(fisher)!,
             CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                UpdateTime = fisher.LastUpdated?.ToUniversalTime().ToString("O")
+                UpdateTime = fisher.LastUpdated
             }
         };
 
