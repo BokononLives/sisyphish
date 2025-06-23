@@ -28,7 +28,7 @@ public class FirestoreDbPromptService : IPromptService
         var prompt = new Prompt
         {
             Id = document.Id,
-            LastUpdated = GoogleCloudFirestoreDocument.ParseDateTime(document.UpdateTime),
+            LastUpdated = document.UpdateTime,
             CreatedAt = GoogleCloudFirestoreDocument.ParseDateTime(document.CreateTime),
             DiscordUserId = document.GetString("discord_user_id"),
             DiscordPromptId = document.GetString("discord_prompt_id"),
@@ -74,7 +74,7 @@ public class FirestoreDbPromptService : IPromptService
         var createResponse = await _firestore.CreateDocument(createRequest);
 
         prompt.Id = createResponse?.Id;
-        prompt.LastUpdated = GoogleCloudFirestoreDocument.ParseDateTime(createResponse?.UpdateTime);
+        prompt.LastUpdated = createResponse?.UpdateTime;
 
         return prompt;
     }
@@ -140,7 +140,7 @@ public class FirestoreDbPromptService : IPromptService
             Fields = SerializePromptFields(prompt)!,
             CurrentDocument = new UpdateFirestoreDocumentPrecondition
             {
-                UpdateTime = prompt.LastUpdated?.ToUniversalTime().ToString("O")
+                UpdateTime = prompt.LastUpdated
             }
         };
 
