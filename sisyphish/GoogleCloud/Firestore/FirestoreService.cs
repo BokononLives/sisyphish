@@ -100,7 +100,7 @@ public class FirestoreService : IFirestoreService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, await httpResponse.Content.ReadAsStringAsync())
+            _logger.LogError(ex, await httpResponse.Content.ReadAsStringAsync());
         }
 
         var documents = await httpResponse.Content.ReadFromJsonAsync(
