@@ -53,13 +53,6 @@ public class CloudTasksService : ICloudTasksService
             value: taskRequest,
             jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudTaskRequest
         );
-
-        var taskResponseString = await taskResponse.Content.ReadAsStringAsync();
-
-        _logger.LogInformation($@"Task requested:
-            - response code: {taskResponse.StatusCode}
-            - response: {taskResponseString}
-        ");
     }
 
     private async Task<string> GetAccessToken()

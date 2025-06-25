@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging.Console;
 using sisyphish.Controllers;
 using sisyphish.Discord;
 using sisyphish.Extensions;
@@ -28,10 +29,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Logging.ClearProviders();
-builder.Logging.AddJsonConsole(options =>
-{
-    options.JsonWriterOptions = new() { Indented = false };
-});
+builder.Logging.AddJsonConsole();
+builder.Services.Configure<ConsoleLoggerOptions>(o => o.LogToStandardErrorThreshold = LogLevel.Information);
 
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<IFirestoreService, FirestoreService>();
