@@ -27,6 +27,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     setUpJsonSerializerOptions(options.SerializerOptions);
 });
 
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.JsonWriterOptions = new() { Indented = false };
+});
+
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<IFirestoreService, FirestoreService>();
 builder.Services.AddScoped<DiscordFilter>();
