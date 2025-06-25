@@ -112,5 +112,5 @@ public class GoogleCloudFirestoreQueryResponse
 public class GoogleCloudFirestoreCompositeFilter
 {
     public string? Op { get; set; }
-    public List<GoogleCloudFirestoreFieldFilter> Filters { get; set; } = [];
+    public List<GoogleCloudFirestoreWhereClause> Filters { get; set; } = [];
 }

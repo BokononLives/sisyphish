@@ -77,11 +77,14 @@ public class FirestoreService : IFirestoreService
                     CompositeFilter = new GoogleCloudFirestoreCompositeFilter
                     {
                         Op = "AND",
-                        Filters = fields.Select(f => new GoogleCloudFirestoreFieldFilter
+                        Filters = fields.Select(f => new GoogleCloudFirestoreWhereClause
                         {
-                            Field = new GoogleCloudFirestoreFieldReference { FieldPath = f.Key },
-                            Op = "EQUAL",
-                            Value = new GoogleCloudFirestoreValue { StringValue = f.Value }
+                            FieldFilter = new GoogleCloudFirestoreFieldFilter
+                            {
+                                Field = new GoogleCloudFirestoreFieldReference { FieldPath = f.Key },
+                                Op = "EQUAL",
+                                Value = new GoogleCloudFirestoreValue { StringValue = f.Value }
+                            }
                         }).ToList()
                     }
                 }
