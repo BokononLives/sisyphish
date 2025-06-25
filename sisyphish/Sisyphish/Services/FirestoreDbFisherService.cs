@@ -121,7 +121,7 @@ public class FirestoreDbFisherService : IFisherService
             return null;
         }
 
-        var fields = new Dictionary<string, GoogleCloudFirestoreValue>()
+        var fields = new Dictionary<string, GoogleCloudFirestoreValue>() //TODO: created_at
             .AddIfNotNull("discord_user_id", fisher.DiscordUserId)
             .AddIfNotNull("fish_caught", fisher.FishCaught)
             .AddIfNotNull("biggest_fish", fisher.BiggestFish)
