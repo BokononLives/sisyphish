@@ -1,25 +1,20 @@
 using System.Text;
 using System.Text.Json;
 using sisyphish.Discord.Models;
+using sisyphish.GoogleCloud.Authentication;
 using sisyphish.Tools;
 
 namespace sisyphish.GoogleCloud.CloudTasks;
 
-public class CloudTasksService : ICloudTasksService
+public class CloudTasksService : GoogleCloudService, ICloudTasksService
 {
-    private readonly ILogger<CloudTasksService> _logger;
-
-    private string? _accessToken;
-    private DateTime? _accessTokenExpirationDate;
-
-    public CloudTasksService(ILogger<CloudTasksService> logger)
+    public CloudTasksService(ILogger<CloudTasksService> logger, IGoogleCloudAuthenticationService authenticationService, HttpClient httpClient): base(logger, authenticationService, httpClient)
     {
-        _logger = logger;
     }
 
     public async Task CreateHttpPostTask(string url, DiscordInteraction body)
     {
-        var accessToken = await GetAccessToken();
+        await Authenticate();
 
         var serializedBody = JsonSerializer.Serialize(body, SnakeCaseJsonContext.Default.DiscordInteraction);
         var encodedBody = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedBody));
@@ -46,40 +41,12 @@ public class CloudTasksService : ICloudTasksService
             }
         };
 
-        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Authorization", $"Bearer {accessToken}" } } };
-
-        var taskResponse = await httpClient.PostAsJsonAsync(
-            requestUri: $"{Config.GoogleTasksBaseUrl}/tasks",
+        var httpResponse = await _httpClient.PostAsJsonAsync(
+            requestUri: "tasks",
             value: taskRequest,
             jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudTaskRequest
         );
-    }
 
-    private async Task<string> GetAccessToken()
-    {
-        if (!string.IsNullOrWhiteSpace(_accessToken) && (_accessTokenExpirationDate == null || _accessTokenExpirationDate > DateTime.UtcNow))
-        {
-            return _accessToken;
-        }
-
-        using var httpClient = new HttpClient { DefaultRequestHeaders = { { "Metadata-Flavor", "Google" } } };
-
-        var accessTokenResponse = await httpClient.GetFromJsonAsync(
-            requestUri: $"{Config.GoogleMetadataBaseUrl}/computeMetadata/v1/instance/service-accounts/default/token",
-            jsonTypeInfo: SnakeCaseJsonContext.Default.GoogleCloudAccessToken
-        );
-
-        if (string.IsNullOrWhiteSpace(accessTokenResponse?.AccessToken))
-        {
-            _logger.LogError(@$"Google Access Token was unexpectedly null:
-                - response: {accessTokenResponse}");
-
-            throw new Exception("Unable to acquire Google Access token");
-        }
-        
-        _accessToken = accessTokenResponse.AccessToken;
-        _accessTokenExpirationDate = DateTime.UtcNow.AddSeconds((accessTokenResponse.ExpiresIn ?? 0) - 60);
-
-        return _accessToken;
+        httpResponse.EnsureSuccessStatusCode();
     }
 }
