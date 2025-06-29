@@ -60,11 +60,11 @@ builder.Services.AddHttpClient<ILoggerProvider, GoogleCloudLoggerProvider>(clien
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
 });
 
-builder.Services.AddSingleton<IGoogleCloudAuthenticationService, GoogleCloudAuthenticationService>();
-builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
-builder.Services.AddScoped<IFirestoreService, FirestoreService>();
+//builder.Services.AddSingleton<IGoogleCloudAuthenticationService, GoogleCloudAuthenticationService>();
+//builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
+//builder.Services.AddScoped<IFirestoreService, FirestoreService>();
 builder.Services.AddScoped<DiscordFilter>();
-builder.Services.AddScoped<IDiscordService, DiscordService>();
+//builder.Services.AddScoped<IDiscordService, DiscordService>();
 builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
 builder.Services.AddScoped<IPromptService, FirestoreDbPromptService>();
 builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
