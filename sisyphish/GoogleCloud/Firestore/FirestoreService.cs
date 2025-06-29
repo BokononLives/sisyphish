@@ -15,7 +15,7 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
         await Authenticate();
 
         var firestoreDocument = await _httpClient.GetFromJsonAsync(
-            requestUri: "databases/(default)/documents/{documentType}/{documentId}",
+            requestUri: $"databases/(default)/documents/{documentType}/{documentId}",
             jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudFirestoreDocument
         );
 
@@ -113,7 +113,7 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
         await Authenticate();
 
         var httpResponse = await _httpClient.PostAsJsonAsync(
-            requestUri: "databases/(default)/documents/{request.DocumentType}?documentId={request.DocumentId}",
+            requestUri: $"databases/(default)/documents/{request.DocumentType}?documentId={request.DocumentId}",
             value: request,
             jsonTypeInfo: CamelCaseJsonContext.Default.CreateFirestoreDocumentRequest
         );
@@ -137,7 +137,7 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
         }
 
         var httpResponse = await _httpClient.PatchAsJsonAsync(
-            requestUri: "databases/(default)/documents/{request.DocumentType}/{request.DocumentId}?{queryString}",
+            requestUri: $"databases/(default)/documents/{request.DocumentType}/{request.DocumentId}?{queryString}",
             value: request,
             jsonTypeInfo: CamelCaseJsonContext.Default.UpdateFirestoreDocumentRequest
         );
@@ -154,7 +154,7 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
         await Authenticate();
 
         var httpResponse = await _httpClient.DeleteAsync(
-            requestUri: "databases/(default)/documents/{request.DocumentType}/{request.DocumentId}"
+            requestUri: $"databases/(default)/documents/{request.DocumentType}/{request.DocumentId}"
         );
 
         httpResponse.EnsureSuccessStatusCode();

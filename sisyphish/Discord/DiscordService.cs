@@ -25,7 +25,7 @@ public class DiscordService : IDiscordService
         await SendResponse(async (httpClient) =>
         {
             return await httpClient.PostAsJsonAsync(
-                requestUri: $"{Config.DiscordBaseUrl}/interactions/{interaction.Id}/{interaction.Token}/callback",
+                requestUri: $"interactions/{interaction.Id}/{interaction.Token}/callback",
                 value: body,
                 jsonTypeInfo: SnakeCaseJsonContext.Default.DiscordDeferralCallbackResponse);
         });
@@ -38,7 +38,7 @@ public class DiscordService : IDiscordService
         await SendResponse(async (httpClient) =>
         {
             return await httpClient.DeleteAsync(
-                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/{messageToDelete}"
+                requestUri: $"webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/{messageToDelete}"
             );
         });
     }
@@ -54,7 +54,7 @@ public class DiscordService : IDiscordService
         await SendResponse(async (httpClient) =>
         {
             return await httpClient.PatchAsJsonAsync(
-                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
+                requestUri: $"webhooks/{Config.DiscordApplicationId}/{interaction.Token}/messages/@original",
                 value: body,
                 jsonTypeInfo: SnakeCaseJsonContext.Default.DiscordInteractionEdit
             );
@@ -73,7 +73,7 @@ public class DiscordService : IDiscordService
         await SendResponse(async (httpClient) =>
         {
             return await httpClient.PostAsJsonAsync(
-                requestUri: $"{Config.DiscordBaseUrl}/webhooks/{Config.DiscordApplicationId}/{interaction.Token}",
+                requestUri: $"webhooks/{Config.DiscordApplicationId}/{interaction.Token}",
                 value: body,
                 jsonTypeInfo: SnakeCaseJsonContext.Default.DiscordInteractionEdit
             );
