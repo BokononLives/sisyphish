@@ -14,7 +14,7 @@ public partial class GoogleCloudLoggingService : GoogleCloudService, ILogger
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default;
 
-    public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
+    public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None && logLevel >= LogLevel.Information;
 
     public async void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
