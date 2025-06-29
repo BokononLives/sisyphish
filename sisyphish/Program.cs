@@ -69,15 +69,14 @@ builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
 
 builder.Logging.ClearProviders();
+builder.Services.AddSingleton<GoogleCloudLoggerProvider>();
 builder.Services.AddHttpClient(nameof(GoogleCloudLoggerProvider), client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
 });
 builder.Services.AddSingleton<ILoggerProvider>(x =>
 {
-    return new GoogleCloudLoggerProvider(
-        x.GetRequiredService<IGoogleCloudAuthenticationService>(),
-        x.GetRequiredService<IHttpClientFactory>());
+    return x.GetRequiredService<GoogleCloudLoggerProvider>();
 });
 
 var app = builder.Build();
