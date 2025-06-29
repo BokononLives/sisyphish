@@ -55,16 +55,7 @@ builder.Services.AddHttpClient<IDiscordService, DiscordService>(client =>
     client.BaseAddress = new Uri(Config.DiscordBaseUrl);
 });
 
-builder.Services.AddHttpClient<ILoggerProvider, GoogleCloudLoggerProvider>(client =>
-{
-    client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
-});
-
-//builder.Services.AddSingleton<IGoogleCloudAuthenticationService, GoogleCloudAuthenticationService>();
-//builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
-//builder.Services.AddScoped<IFirestoreService, FirestoreService>();
 builder.Services.AddScoped<DiscordFilter>();
-//builder.Services.AddScoped<IDiscordService, DiscordService>();
 builder.Services.AddScoped<IFisherService, FirestoreDbFisherService>();
 builder.Services.AddScoped<IPromptService, FirestoreDbPromptService>();
 builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
@@ -77,13 +68,16 @@ builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
 
 builder.Logging.ClearProviders();
+builder.Services.AddHttpClient<ILoggerProvider, GoogleCloudLoggerProvider>(client =>
+{
+    client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
+});
 // builder.Services.AddSingleton<ILoggerProvider>(x =>
 // {
 //     return new GoogleCloudLoggerProvider(
 //         x.GetRequiredService<IGoogleCloudAuthenticationService>(),
 //         x.GetRequiredService<HttpClient>());
 // });
-builder.Logging.AddJsonConsole();
 
 var app = builder.Build();
 
