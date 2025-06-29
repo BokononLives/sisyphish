@@ -76,14 +76,14 @@ builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
 builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
 
-
 builder.Logging.ClearProviders();
-builder.Services.AddSingleton<ILoggerProvider>(x =>
-{
-    return new GoogleCloudLoggerProvider(
-        x.GetRequiredService<IGoogleCloudAuthenticationService>(),
-        x.GetRequiredService<HttpClient>());
-});
+// builder.Services.AddSingleton<ILoggerProvider>(x =>
+// {
+//     return new GoogleCloudLoggerProvider(
+//         x.GetRequiredService<IGoogleCloudAuthenticationService>(),
+//         x.GetRequiredService<HttpClient>());
+// });
+builder.Logging.AddJsonConsole();
 
 var app = builder.Build();
 
