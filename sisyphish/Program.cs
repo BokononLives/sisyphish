@@ -1,12 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging.Console;
 using sisyphish.Controllers;
 using sisyphish.Discord;
 using sisyphish.Extensions;
 using sisyphish.Filters;
+using sisyphish.GoogleCloud.Authentication;
 using sisyphish.GoogleCloud.CloudTasks;
 using sisyphish.GoogleCloud.Firestore;
+using sisyphish.GoogleCloud.Logging;
 using sisyphish.Sisyphish.Processors;
 using sisyphish.Sisyphish.Services;
 using sisyphish.Tools;
@@ -28,10 +29,38 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     setUpJsonSerializerOptions(options.SerializerOptions);
 });
 
-builder.Logging.ClearProviders();
-builder.Logging.AddJsonConsole();
-builder.Services.Configure<ConsoleLoggerOptions>(o => o.LogToStandardErrorThreshold = LogLevel.Information);
+builder.Services.AddHttpClient<IGoogleCloudAuthenticationService, GoogleCloudAuthenticationService>(client =>
+{
+    client.BaseAddress = new Uri(Config.GoogleMetadataBaseUrl);
+    client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
+});
 
+builder.Services.AddHttpClient<ICloudTasksService, CloudTasksService>(client =>
+{
+    client.BaseAddress = new Uri(Config.GoogleTasksBaseUrl);
+});
+
+builder.Services.AddHttpClient<IFirestoreService, FirestoreService>(client =>
+{
+    client.BaseAddress = new Uri(Config.GoogleFirestoreBaseUrl);
+});
+
+builder.Services.AddHttpClient<GoogleCloudFilter>(client =>
+{
+    client.BaseAddress = new Uri(Config.GoogleCertsBaseUrl);
+});
+
+builder.Services.AddHttpClient<IDiscordService, DiscordService>(client =>
+{
+    client.BaseAddress = new Uri(Config.DiscordBaseUrl);
+});
+
+builder.Services.AddHttpClient<ILoggerProvider, GoogleCloudLoggerProvider>(client =>
+{
+    client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
+});
+
+builder.Services.AddSingleton<IGoogleCloudAuthenticationService, GoogleCloudAuthenticationService>();
 builder.Services.AddScoped<ICloudTasksService, CloudTasksService>();
 builder.Services.AddScoped<IFirestoreService, FirestoreService>();
 builder.Services.AddScoped<DiscordFilter>();
@@ -46,6 +75,15 @@ builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
 ]);
 builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
+
+
+builder.Logging.ClearProviders();
+builder.Services.AddSingleton<ILoggerProvider>(x =>
+{
+    return new GoogleCloudLoggerProvider(
+        x.GetRequiredService<IGoogleCloudAuthenticationService>(),
+        x.GetRequiredService<HttpClient>());
+});
 
 var app = builder.Build();
 

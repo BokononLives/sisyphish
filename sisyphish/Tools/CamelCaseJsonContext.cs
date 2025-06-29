@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using sisyphish.GoogleCloud.CloudTasks;
 using sisyphish.GoogleCloud.Firestore;
+using sisyphish.GoogleCloud.Logging;
 
 namespace sisyphish.Tools;
 
@@ -25,6 +26,10 @@ namespace sisyphish.Tools;
 [JsonSerializable(typeof(CreateFirestoreDocumentRequest))]
 [JsonSerializable(typeof(UpdateFirestoreDocumentRequest))]
 [JsonSerializable(typeof(UpdateFirestoreDocumentPrecondition))]
+[JsonSerializable(typeof(GoogleCloudLoggingJsonPayload))]
+[JsonSerializable(typeof(GoogleCloudLoggingLogEntry))]
+[JsonSerializable(typeof(GoogleCloudLoggingLogRequest))]
+[JsonSerializable(typeof(GoogleCloudLoggingLogResource))]
 internal partial class CamelCaseJsonContext : JsonSerializerContext
 {
 }

@@ -7,10 +7,12 @@ namespace sisyphish.Discord;
 public class DiscordService : IDiscordService
 {
     private readonly ILogger<DiscordService> _logger;
+    private readonly HttpClient _httpClient;
 
-    public DiscordService(ILogger<DiscordService> logger)
+    public DiscordService(ILogger<DiscordService> logger, HttpClient httpClient)
     {
         _logger = logger;
+        _httpClient = httpClient;
     }
 
     public async Task DeferResponse(DiscordInteraction interaction, bool isEphemeral)
@@ -90,8 +92,7 @@ public class DiscordService : IDiscordService
         {
             attempts++;
 
-            using var httpClient = new HttpClient();
-            var response = await sendResponse(httpClient);
+            var response = await sendResponse(_httpClient);
 
             if (response.IsSuccessStatusCode)
             {
@@ -99,14 +100,12 @@ public class DiscordService : IDiscordService
             }
             else
             {
-                var shouldRetry = response.StatusCode == HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500;
+                var shouldRetry = response.StatusCode == HttpStatusCode.TooManyRequests || response.StatusCode == HttpStatusCode.RequestTimeout || (int)response.StatusCode >= 500;
 
                 var retryAfter =
                     shouldRetry
                         ? response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(1)
                         : TimeSpan.FromSeconds(0);
-                
-                httpClient.Dispose();
 
                 requestContent = await ((response.RequestMessage?.Content?.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));
                 responseErrorContent = await ((response.Content.ReadAsStringAsync()) ?? Task.FromResult(string.Empty));

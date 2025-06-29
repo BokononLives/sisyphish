@@ -8,8 +8,12 @@ public class Config
     public static string DiscordPublicKey => GetValue("DISCORD_PUBLIC_KEY");
     public static string DiscordToken => GetValue("DISCORD_TOKEN");
     public static string GoogleCertsBaseUrl => "https://www.googleapis.com/oauth2/v3/certs";
+    public static string GoogleCloudRunRevisionName => GetValue("K_REVISION", defaultValue: "unknown");
+    public static string GoogleCloudRunServiceName => GetValue("K_SERVICE", defaultValue: "unknown");
     public static string GoogleFirestoreBaseUrl => $"https://firestore.googleapis.com/v1/projects/{GoogleProjectId}";
     public static string GoogleLocation => "us-central1";
+    public static string GoogleLoggingBaseUrl => "https://logging.googleapis.com/v2";
+    public static string GoogleLoggingLogName => "sisyphish";
     public static string GoogleMetadataBaseUrl => "http://metadata";
     public static string GoogleProjectId => GetValue("GOOGLE_PROJECT_ID");
     public static string GoogleServiceAccount => GetValue("GOOGLE_SERVICE_ACCOUNT");
@@ -19,8 +23,8 @@ public class Config
     public static string PublicBaseUrl => "https://helloworld-33197368037.us-central1.run.app";
     public static string Url => $"{BaseUrl}:{Port}";
 
-    private static string GetValue(string key)
+    private static string GetValue(string key, string? defaultValue = null)
     {
-        return Environment.GetEnvironmentVariable(key) ?? string.Empty;
+        return Environment.GetEnvironmentVariable(key) ?? defaultValue ?? string.Empty;
     }
 }

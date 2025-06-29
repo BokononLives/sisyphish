@@ -1,16 +1,14 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using sisyphish.GoogleCloud;
 using sisyphish.Tools;
 
 namespace sisyphish.Filters;
 
-public class GoogleCloudFilter : IEndpointFilter
+public class GoogleCloudFilter : GoogleCloudService, IEndpointFilter
 {
-    private readonly ILogger<GoogleCloudFilter> _logger;
-
-    public GoogleCloudFilter(ILogger<GoogleCloudFilter> logger)
+    public GoogleCloudFilter(ILogger<GoogleCloudFilter> logger, HttpClient httpClient) : base(logger, null, httpClient)
     {
-        _logger = logger;
     }
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
@@ -62,7 +60,7 @@ public class GoogleCloudFilter : IEndpointFilter
 
             if (!emailAddress.Value.Equals(Config.GoogleServiceAccount))
             {
-                _logger.LogInformation(@$"Validation failed:
+                _logger?.LogInformation(@$"Validation failed:
                     - token email address: {emailAddress}");
 
                 return Results.Unauthorized();
@@ -70,21 +68,19 @@ public class GoogleCloudFilter : IEndpointFilter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Validation failed");
+            _logger?.LogError(ex, "Validation failed");
         }
         
         return await next(context);
     }
 
-    private static async Task<IEnumerable<SecurityKey>> GetGooglePublicKeys()
+    private async Task<IEnumerable<SecurityKey>> GetGooglePublicKeys()
     {
-        using var httpClient = new HttpClient();
-
-        var certsResponse = await httpClient.GetStringAsync(
-            requestUri: Config.GoogleCertsBaseUrl
+        var httpResponse = await _httpClient.GetStringAsync(
+            requestUri: ""
         );
 
-        var result = new JsonWebKeySet(certsResponse).Keys.OfType<SecurityKey>();
+        var result = new JsonWebKeySet(httpResponse).Keys.OfType<SecurityKey>();
         return result;
     }
 }
