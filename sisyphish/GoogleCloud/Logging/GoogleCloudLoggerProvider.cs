@@ -1,3 +1,4 @@
+using System.Net.Http;
 using sisyphish.GoogleCloud.Authentication;
 
 namespace sisyphish.GoogleCloud.Logging;
@@ -5,17 +6,18 @@ namespace sisyphish.GoogleCloud.Logging;
 public class GoogleCloudLoggerProvider : ILoggerProvider
 {
     private readonly IGoogleCloudAuthenticationService _authenticationService;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public GoogleCloudLoggerProvider(IGoogleCloudAuthenticationService authenticationService, HttpClient httpClient)
+    public GoogleCloudLoggerProvider(IGoogleCloudAuthenticationService authenticationService, IHttpClientFactory httpClientFactory)
     {
         _authenticationService = authenticationService;
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new GoogleCloudLoggingService(categoryName, _authenticationService, _httpClient);
+        var httpClient = _httpClientFactory.CreateClient(nameof(GoogleCloudLoggerProvider));
+        return new GoogleCloudLoggingService(categoryName, _authenticationService, httpClient);
     }
 
     public void Dispose()

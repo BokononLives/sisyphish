@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using sisyphish.Controllers;
@@ -68,16 +69,16 @@ builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
 
 builder.Logging.ClearProviders();
-builder.Services.AddHttpClient<ILoggerProvider, GoogleCloudLoggerProvider>(client =>
+builder.Services.AddHttpClient(nameof(GoogleCloudLoggerProvider), client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
 });
-// builder.Services.AddSingleton<ILoggerProvider>(x =>
-// {
-//     return new GoogleCloudLoggerProvider(
-//         x.GetRequiredService<IGoogleCloudAuthenticationService>(),
-//         x.GetRequiredService<HttpClient>());
-// });
+builder.Services.AddSingleton<ILoggerProvider>(x =>
+{
+    return new GoogleCloudLoggerProvider(
+        x.GetRequiredService<IGoogleCloudAuthenticationService>(),
+        x.GetRequiredService<IHttpClientFactory>());
+});
 
 var app = builder.Build();
 
