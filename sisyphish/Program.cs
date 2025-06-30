@@ -71,7 +71,7 @@ builder.Logging.ClearProviders();
 builder.Services.AddHttpClient(nameof(GoogleCloudLoggerProvider), client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
-});
+}).RemoveAllLoggers();
 builder.Services.AddSingleton<ILoggerProvider, GoogleCloudLoggerProvider>();
 
 var app = builder.Build();
