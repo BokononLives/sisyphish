@@ -111,7 +111,15 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
                 cancellationToken: cancellationToken
             );
 
-            httpResponse.EnsureSuccessStatusCode();
+            try
+            {
+                httpResponse.EnsureSuccessStatusCode();
+            }
+            catch
+            {
+                Console.Error.WriteLine(await httpResponse.Content.ReadAsStringAsync(cancellationToken));
+                throw;
+            }
         }
         catch (Exception ex)
         {
