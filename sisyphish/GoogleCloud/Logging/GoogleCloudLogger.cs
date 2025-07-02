@@ -94,7 +94,7 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
             };
 
             var httpResponse = await _httpClient.PostAsJsonAsync(
-                requestUri: "entries%3Awrite",
+                requestUri: "v2/entries:write",
                 value: logRequest,
                 jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudLoggingLogRequest,
                 cancellationToken: cancellationToken

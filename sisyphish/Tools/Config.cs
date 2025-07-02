@@ -12,7 +12,7 @@ public class Config
     public static string GoogleCloudRunServiceName => GetValue("K_SERVICE", defaultValue: "unknown");
     public static string GoogleFirestoreBaseUrl => $"https://firestore.googleapis.com/v1/projects/{GoogleProjectId}/";
     public static string GoogleLocation => "us-central1";
-    public static string GoogleLoggingBaseUrl => "https://logging.googleapis.com/v2/";
+    public static string GoogleLoggingBaseUrl => "https://logging.googleapis.com/";
     public static string GoogleLoggingLogName => "sisyphish";
     public static string GoogleMetadataBaseUrl => "http://metadata/";
     public static string GoogleProjectId => GetValue("GOOGLE_PROJECT_ID");
