@@ -174,6 +174,8 @@ public class GoogleCloudLogger : ILogger
 
             var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
             Console.Error.WriteLine(errorJson);
+
+            return null;
         }
     }
 }
