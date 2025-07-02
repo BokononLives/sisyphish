@@ -1,26 +1,18 @@
-using System.Net.Http;
-using sisyphish.GoogleCloud.Authentication;
+using System.Threading.Channels;
+using sisyphish.Tools;
 
 namespace sisyphish.GoogleCloud.Logging;
 
 public class GoogleCloudLoggerProvider : ILoggerProvider
 {
-    private readonly IGoogleCloudAuthenticationService _authenticationService;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly Channel<Log> _logChannel;
 
-    public GoogleCloudLoggerProvider(IGoogleCloudAuthenticationService authenticationService, IHttpClientFactory httpClientFactory)
+    public GoogleCloudLoggerProvider(Channel<Log> logChannel)
     {
-        _authenticationService = authenticationService;
-        _httpClientFactory = httpClientFactory;
+        _logChannel = logChannel;
     }
 
-    public ILogger CreateLogger(string categoryName)
-    {
-        var httpClient = _httpClientFactory.CreateClient(nameof(GoogleCloudLoggerProvider));
-        return new GoogleCloudLoggingService(categoryName, _authenticationService, httpClient);
-    }
+    public ILogger CreateLogger(string categoryName) => new GoogleCloudLogger(categoryName, _logChannel.Writer);
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() => _logChannel.Writer.Complete();
 }
