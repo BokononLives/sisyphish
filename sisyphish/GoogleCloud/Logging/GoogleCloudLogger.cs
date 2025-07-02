@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Threading.Channels;
 using sisyphish.GoogleCloud.Authentication;
 using sisyphish.Tools;
@@ -26,6 +27,11 @@ public class GoogleCloudLoggingBackgroundService : BackgroundService
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Unable to write log to Google Cloud Logging Api - {ex.Message}");
+
+                var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
+                Console.Error.WriteLine(errorJson);
+
+                Console.WriteLine(log.Text);
             }
         }
     }
@@ -34,6 +40,11 @@ public class GoogleCloudLoggingBackgroundService : BackgroundService
     {
         await base.StopAsync(cancellationToken);
     }
+}
+
+public class FallbackErrorLog
+{
+    public string? Error { get; set; }
 }
 
 public interface IGoogleCloudLoggingService
@@ -105,6 +116,10 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Unable to write log to Google Cloud Logging Api - {ex.Message}");
+
+            var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
+            Console.Error.WriteLine(errorJson);
+
             Console.WriteLine(log.Text);
         }
     }
@@ -156,7 +171,9 @@ public class GoogleCloudLogger : ILogger
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Unable to format log text - {ex.Message}");
-            return null;
+
+            var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
+            Console.Error.WriteLine(errorJson);
         }
     }
 }
