@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 using sisyphish.Controllers;
 using sisyphish.Discord;
 using sisyphish.Extensions;
@@ -67,12 +68,19 @@ builder.Services.AddScoped<IEnumerable<ICommandProcessor>>(x =>
 builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
 
-builder.Logging.ClearProviders();
-builder.Services.AddHttpClient(nameof(GoogleCloudLoggerProvider), client =>
+var logChannel = Channel.CreateUnbounded<Log>();
+
+builder.Services.AddSingleton(logChannel);
+builder.Services.AddHttpClient<IGoogleCloudLoggingService, GoogleCloudLoggingService>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
 }).RemoveAllLoggers();
-builder.Services.AddSingleton<ILoggerProvider, GoogleCloudLoggerProvider>();
+
+var logProvider = new GoogleCloudLoggerProvider(logChannel);
+builder.Logging.ClearProviders();
+builder.Logging.AddProvider(logProvider);
+
+builder.Services.AddHostedService<GoogleCloudLoggingBackgroundService>();
 
 var app = builder.Build();
 
