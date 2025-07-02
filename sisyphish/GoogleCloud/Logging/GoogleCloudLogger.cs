@@ -28,7 +28,7 @@ public class GoogleCloudLoggingBackgroundService : BackgroundService
             {
                 Console.Error.WriteLine($"Unable to write log to Google Cloud Logging Api - {ex.Message}");
 
-                var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
+                var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString().Replace("\r", "").Replace("\n", "\\n") }, CamelCaseJsonContext.Default.FallbackErrorLog);
                 Console.Error.WriteLine(errorJson);
 
                 Console.WriteLine(log.Text);
@@ -70,7 +70,7 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
         {
             await Authenticate();
 
-            var logSeverity = log.Level.ToString().ToUpper();
+            var logSeverity = MapSeverity(log.Level);
             var timestamp = log.Timestamp.ToString("o");
 
             var logRequest = new GoogleCloudLoggingLogRequest
@@ -125,11 +125,24 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
         {
             Console.Error.WriteLine($"Unable to write log to Google Cloud Logging Api - {ex.Message}");
 
-            var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
+            var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString().Replace("\r", "").Replace("\n", "\\n") }, CamelCaseJsonContext.Default.FallbackErrorLog);
             Console.Error.WriteLine(errorJson);
 
             Console.WriteLine(log.Text);
         }
+    }
+
+    private static string MapSeverity(LogLevel? level)
+    {
+        return level switch
+        {
+            LogLevel.Trace or LogLevel.Debug => "DEBUG",
+            LogLevel.Information => "INFO",
+            LogLevel.Warning => "WARNING",
+            LogLevel.Error => "ERROR",
+            LogLevel.Critical => "CRITICAL",
+            _ => "DEFAULT"
+        };
     }
 }
 
@@ -180,7 +193,7 @@ public class GoogleCloudLogger : ILogger
         {
             Console.Error.WriteLine($"Unable to format log text - {ex.Message}");
 
-            var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString() }, CamelCaseJsonContext.Default.FallbackErrorLog);
+            var errorJson = JsonSerializer.Serialize(new FallbackErrorLog { Error = ex.ToString().Replace("\r", "").Replace("\n", "\\n") }, CamelCaseJsonContext.Default.FallbackErrorLog);
             Console.Error.WriteLine(errorJson);
 
             return null;
