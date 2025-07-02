@@ -70,7 +70,7 @@ builder.Services.AddScoped<SisyphishController>();
 
 var logChannel = Channel.CreateUnbounded<Log>();
 
-builder.Services.AddSingleton(logChannel);
+builder.Services.AddSingleton(logChannel.Reader);
 builder.Services.AddHttpClient<IGoogleCloudLoggingService, GoogleCloudLoggingService>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
