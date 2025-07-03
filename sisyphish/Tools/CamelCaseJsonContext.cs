@@ -29,7 +29,6 @@ namespace sisyphish.Tools;
 [JsonSerializable(typeof(GoogleCloudLoggingJsonPayload))]
 [JsonSerializable(typeof(GoogleCloudLoggingLogEntry))]
 [JsonSerializable(typeof(GoogleCloudLoggingLogRequest))]
-[JsonSerializable(typeof(GoogleCloudLoggingLogResource))]
 [JsonSerializable(typeof(FallbackErrorLog))]
 internal partial class CamelCaseJsonContext : JsonSerializerContext
 {

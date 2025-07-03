@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using sisyphish.Discord.Models;
+using sisyphish.GoogleCloud.Logging;
 using sisyphish.GoogleCloud.Models;
 
 namespace sisyphish.Tools;
@@ -12,6 +13,7 @@ namespace sisyphish.Tools;
 [JsonSerializable(typeof(DiscordDeferralCallbackResponse))]
 [JsonSerializable(typeof(DiscordInteractionEdit))]
 [JsonSerializable(typeof(GoogleCloudAccessToken))]
+[JsonSerializable(typeof(GoogleCloudLoggingLogResource))]
 internal partial class SnakeCaseJsonContext : JsonSerializerContext
 {
 }
