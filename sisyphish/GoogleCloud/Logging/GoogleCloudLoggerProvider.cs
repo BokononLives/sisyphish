@@ -5,14 +5,14 @@ namespace sisyphish.GoogleCloud.Logging;
 
 public class GoogleCloudLoggerProvider : ILoggerProvider
 {
-    private readonly Channel<Log> _logChannel;
+    private readonly ChannelWriter<Log> _logWriter;
 
-    public GoogleCloudLoggerProvider(Channel<Log> logChannel)
+    public GoogleCloudLoggerProvider(ChannelWriter<Log> logWriter)
     {
-        _logChannel = logChannel;
+        _logWriter = logWriter;
     }
 
-    public ILogger CreateLogger(string categoryName) => new GoogleCloudLogger(categoryName, _logChannel.Writer);
+    public ILogger CreateLogger(string categoryName) => new GoogleCloudLogger(categoryName, _logWriter);
 
-    public void Dispose() => _logChannel.Writer.Complete();
+    public void Dispose() => _logWriter.Complete();
 }

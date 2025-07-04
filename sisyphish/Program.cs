@@ -69,20 +69,42 @@ builder.Services.AddScoped<HomeController>();
 builder.Services.AddScoped<SisyphishController>();
 
 var logChannel = Channel.CreateUnbounded<Log>();
+var logReader = logChannel.Reader;
+var logWriter = logChannel.Writer;
 
-builder.Services.AddSingleton(logChannel.Reader);
+var requestTracker = new RequestTracker();
+
+builder.Services.AddSingleton(logReader);
 builder.Services.AddHttpClient<IGoogleCloudLoggingService, GoogleCloudLoggingService>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
 }).RemoveAllLoggers();
 
-var logProvider = new GoogleCloudLoggerProvider(logChannel);
+var logProvider = new GoogleCloudLoggerProvider(logWriter);
 builder.Logging.ClearProviders();
 builder.Logging.AddProvider(logProvider);
 
-builder.Services.AddHostedService<GoogleCloudLoggingBackgroundService>();
+builder.Services.AddSingleton<GoogleCloudLoggingBackgroundService>();
 
 var app = builder.Build();
+
+var logService = app.Services.GetRequiredService<GoogleCloudLoggingBackgroundService>();
+
+var processLogs = Task.Run(() => logService.ProcessLogs());
+
+app.Use(async (context, next) =>
+{
+    requestTracker.BeginRequest();
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        requestTracker.EndRequest();
+    }
+});
 
 app.MapGet("/", (HomeController controller) =>
 {
@@ -149,6 +171,18 @@ app.Use(async (context, next) =>
     context.Request.EnableBuffering();
 
     await next();
+});
+
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    Task.Run(async () =>
+    {
+        await requestTracker.WaitForAllRequestsToProcess();
+
+        logWriter.Complete();
+
+        await processLogs;
+    });
 });
 
 app.Run(Config.Url);
