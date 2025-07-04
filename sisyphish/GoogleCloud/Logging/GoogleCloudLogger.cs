@@ -5,7 +5,7 @@ using sisyphish.Tools;
 
 namespace sisyphish.GoogleCloud.Logging;
 
-public class GoogleCloudLoggingBackgroundService : BackgroundService
+public class GoogleCloudLoggingBackgroundService
 {
     private readonly ChannelReader<Log> _logReader;
     private readonly IGoogleCloudLoggingService _logService;
@@ -16,13 +16,13 @@ public class GoogleCloudLoggingBackgroundService : BackgroundService
         _logService = logService;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async Task ProcessLogs()
     {
-        await foreach (var log in _logReader.ReadAllAsync(cancellationToken))
+        await foreach (var log in _logReader.ReadAllAsync())
         {
             try
             {
-                await _logService.Log(log, cancellationToken);
+                await _logService.Log(log);
             }
             catch (Exception ex)
             {
@@ -35,11 +35,6 @@ public class GoogleCloudLoggingBackgroundService : BackgroundService
             }
         }
     }
-
-    public override async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await base.StopAsync(cancellationToken);
-    }
 }
 
 public class FallbackErrorLog
@@ -49,7 +44,7 @@ public class FallbackErrorLog
 
 public interface IGoogleCloudLoggingService
 {
-    Task Log(Log log, CancellationToken cancellationToken);
+    Task Log(Log log);
 }
 
 public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLoggingService
@@ -58,7 +53,7 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
     {
     }
 
-    public async Task Log(Log log, CancellationToken cancellationToken)
+    public async Task Log(Log log)
     {
         log.Text ??= log.Exception?.Message;
         if (log.Text == null)
@@ -107,8 +102,7 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
             var httpResponse = await _httpClient.PostAsJsonAsync(
                 requestUri: "v2/entries:write",
                 value: logRequest,
-                jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudLoggingLogRequest,
-                cancellationToken: cancellationToken
+                jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudLoggingLogRequest
             );
 
             try
@@ -117,7 +111,7 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
             }
             catch
             {
-                Console.Error.WriteLine(await httpResponse.Content.ReadAsStringAsync(cancellationToken));
+                Console.Error.WriteLine(await httpResponse.Content.ReadAsStringAsync());
                 throw;
             }
         }
