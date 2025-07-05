@@ -78,6 +78,8 @@ public class GoogleCloudFilter : GoogleCloudService, IEndpointFilter
 
     private async Task<IEnumerable<SecurityKey>> GetGooglePublicKeys()
     {
+        _logger?.LogInformation($"Attempting to hit BaseUrl={_httpClient.BaseAddress?.AbsoluteUri}, path = v3/certs/");
+
         var httpResponse = await _httpClient.GetStringAsync(
             requestUri: "v3/certs/"
         );
