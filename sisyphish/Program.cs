@@ -46,7 +46,7 @@ builder.Services.AddHttpClient<IFirestoreService, FirestoreService>(client =>
     client.BaseAddress = new Uri(Config.GoogleFirestoreBaseUrl);
 });
 
-builder.Services.AddHttpClient<GoogleCloudFilter>(client =>
+builder.Services.AddHttpClient<IEndpointFilter, GoogleCloudFilter>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleCertsBaseUrl);
 });
