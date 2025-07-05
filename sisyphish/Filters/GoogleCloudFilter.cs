@@ -69,6 +69,8 @@ public class GoogleCloudFilter : GoogleCloudService, IEndpointFilter
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Validation failed");
+
+            return Results.Unauthorized();
         }
         
         return await next(context);
@@ -77,7 +79,7 @@ public class GoogleCloudFilter : GoogleCloudService, IEndpointFilter
     private async Task<IEnumerable<SecurityKey>> GetGooglePublicKeys()
     {
         var httpResponse = await _httpClient.GetStringAsync(
-            requestUri: ""
+            requestUri: "v3/certs/"
         );
 
         var result = new JsonWebKeySet(httpResponse).Keys.OfType<SecurityKey>();
