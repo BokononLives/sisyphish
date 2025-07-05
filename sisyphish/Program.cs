@@ -163,7 +163,6 @@ app.MapPost("sisyphish/reset", async (HttpContext context, SisyphishController c
     return Results.Ok();
 }).AddEndpointFilter<GoogleCloudFilter>();
 
-app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.Use(async (context, next) =>
