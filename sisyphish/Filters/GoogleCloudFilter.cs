@@ -1,14 +1,18 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
-using sisyphish.GoogleCloud;
 using sisyphish.Tools;
 
 namespace sisyphish.Filters;
 
-public class GoogleCloudFilter : GoogleCloudService, IEndpointFilter
+public class GoogleCloudFilter : IEndpointFilter
 {
-    public GoogleCloudFilter(ILogger<GoogleCloudFilter> logger, HttpClient httpClient) : base(logger, null, httpClient)
+    private readonly ILogger<GoogleCloudFilter> _logger;
+    private readonly HttpClient _httpClient;
+
+    public GoogleCloudFilter(ILogger<GoogleCloudFilter> logger, IHttpClientFactory httpClientFactory)
     {
+        _logger = logger;
+        _httpClient = httpClientFactory.CreateClient(nameof(GoogleCloudFilter));
     }
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
