@@ -179,6 +179,8 @@ app.Lifetime.ApplicationStopping.Register(() =>
     {
         await requestTracker.WaitForAllRequestsToProcess();
 
+        await Task.Delay(200);
+
         logWriter.Complete();
 
         await processLogs;
