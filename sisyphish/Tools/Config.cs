@@ -7,7 +7,7 @@ public class Config
     public static string DiscordBaseUrl => "https://discord.com/api/v10/";
     public static string DiscordPublicKey => GetValue("DISCORD_PUBLIC_KEY");
     public static string DiscordToken => GetValue("DISCORD_TOKEN");
-    public static string GoogleCertsBaseUrl => "https://www.googleapis.com/oauth2/v3/certs/";
+    public static string GoogleCertsBaseUrl => "https://www.googleapis.com/oauth2/";
     public static string GoogleCloudRunRevisionName => GetValue("K_REVISION", defaultValue: "unknown");
     public static string GoogleCloudRunServiceName => GetValue("K_SERVICE", defaultValue: "unknown");
     public static string GoogleFirestoreBaseUrl => $"https://firestore.googleapis.com/v1/projects/{GoogleProjectId}/";
