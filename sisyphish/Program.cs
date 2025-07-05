@@ -178,11 +178,15 @@ app.Lifetime.ApplicationStopping.Register(() =>
     Task.Run(async () =>
     {
         await requestTracker.WaitForAllRequestsToProcess();
+    });
+});
 
+app.Lifetime.ApplicationStopped.Register(() =>
+{
+    Task.Run(async () =>
+    {
         await Task.Delay(200);
-
         logWriter.Complete();
-
         await processLogs;
     });
 });
