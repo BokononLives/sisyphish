@@ -2,18 +2,14 @@ using sisyphish.Tools;
 
 namespace sisyphish.GoogleCloud.Authentication;
 
-public class GoogleCloudAuthenticationService : IGoogleCloudAuthenticationService
+public class GoogleCloudAuthenticationService : GoogleCloudService, IGoogleCloudAuthenticationService
 {
     private string? _accessToken;
     private DateTime? _accessTokenExpirationDate;
     private readonly SemaphoreSlim _lock = new(1, 1);
-    private readonly ILogger<GoogleCloudAuthenticationService> _logger;
-    private readonly HttpClient _httpClient;
 
-    public GoogleCloudAuthenticationService(ILogger<GoogleCloudAuthenticationService> logger, HttpClient httpClient)
+    public GoogleCloudAuthenticationService(ILogger<GoogleCloudAuthenticationService> logger, HttpClient httpClient) : base(logger, null, httpClient)
     {
-        _logger = logger;
-        _httpClient = httpClient;
     }
 
     public async Task<string> GetAccessToken()
