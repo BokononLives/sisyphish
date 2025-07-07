@@ -86,6 +86,7 @@ builder.Logging
     .ClearProviders()
     .AddProvider(logProvider)
     .AddJsonConsole()
+    .AddFilter<ConsoleLoggerProvider>("", LogLevel.None)
     .AddFilter<ConsoleLoggerProvider>("Microsoft.Hosting.Lifetime", LogLevel.Information)
     .AddFilter<ConsoleLoggerProvider>("Microsoft.AspNetCore.Diagnostics", LogLevel.Warning);
 
