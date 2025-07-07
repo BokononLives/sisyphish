@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
+using Microsoft.Extensions.Logging.Console;
 using sisyphish.Controllers;
 using sisyphish.Discord;
 using sisyphish.Extensions;
@@ -81,8 +82,12 @@ builder.Services.AddHttpClient<IGoogleCloudLoggingService, GoogleCloudLoggingSer
 }).RemoveAllLoggers();
 
 var logProvider = new GoogleCloudLoggerProvider(logWriter);
-builder.Logging.ClearProviders();
-builder.Logging.AddProvider(logProvider);
+builder.Logging
+    .ClearProviders()
+    .AddProvider(logProvider)
+    .AddJsonConsole()
+    .AddFilter<ConsoleLoggerProvider>("Microsoft.Hosting.Lifetime", LogLevel.Information)
+    .AddFilter<ConsoleLoggerProvider>("Microsoft.AspNetCore.Diagnostics", LogLevel.Warning);
 
 builder.Services.AddSingleton<GoogleCloudLoggingBackgroundService>();
 
@@ -177,14 +182,9 @@ app.Lifetime.ApplicationStopping.Register(() =>
     Task.Run(async () =>
     {
         await requestTracker.WaitForAllRequestsToProcess();
-    });
-});
-
-app.Lifetime.ApplicationStopped.Register(() =>
-{
-    Task.Run(async () =>
-    {
+        
         await Task.Delay(200);
+
         logWriter.Complete();
         await processLogs;
     });
