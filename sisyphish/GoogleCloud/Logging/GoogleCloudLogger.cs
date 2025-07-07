@@ -33,7 +33,7 @@ public class GoogleCloudLoggingBackgroundService
 
                 Console.WriteLine(log.Text);
             }
-        }
+        } 
     }
 }
 
