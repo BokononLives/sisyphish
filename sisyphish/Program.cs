@@ -85,10 +85,11 @@ var logProvider = new GoogleCloudLoggerProvider(logWriter);
 builder.Logging
     .ClearProviders()
     .AddProvider(logProvider)
+        .AddFilter<GoogleCloudLoggerProvider>("", LogLevel.Warning)
     .AddJsonConsole()
-    .AddFilter<ConsoleLoggerProvider>("", LogLevel.None)
-    .AddFilter<ConsoleLoggerProvider>("Microsoft.Hosting.Lifetime", LogLevel.Information)
-    .AddFilter<ConsoleLoggerProvider>("Microsoft.AspNetCore.Diagnostics", LogLevel.Warning);
+        .AddFilter<ConsoleLoggerProvider>("", LogLevel.None)
+        .AddFilter<ConsoleLoggerProvider>("Microsoft.Hosting.Lifetime", LogLevel.Warning)
+        .AddFilter<ConsoleLoggerProvider>("Microsoft.AspNetCore.Diagnostics", LogLevel.Warning);
 
 builder.Services.AddSingleton<GoogleCloudLoggingBackgroundService>();
 
