@@ -37,15 +37,19 @@ builder.Services.AddHttpClient<IGoogleCloudAuthenticationService, GoogleCloudAut
     client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
 });
 
+builder.Services.AddTransient<GoogleCloudAuthenticationHandler>();
+
 builder.Services.AddHttpClient<ICloudTasksService, CloudTasksService>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleTasksBaseUrl);
-});
+})
+.AddHttpMessageHandler<GoogleCloudAuthenticationHandler>();
 
 builder.Services.AddHttpClient<IFirestoreService, FirestoreService>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleFirestoreBaseUrl);
-});
+})
+.AddHttpMessageHandler<GoogleCloudAuthenticationHandler>();
 
 builder.Services.AddHttpClient(nameof(GoogleCloudFilter), client =>
 {
@@ -79,7 +83,9 @@ builder.Services.AddSingleton(logReader);
 builder.Services.AddHttpClient<IGoogleCloudLoggingService, GoogleCloudLoggingService>(client =>
 {
     client.BaseAddress = new Uri(Config.GoogleLoggingBaseUrl);
-}).RemoveAllLoggers();
+})
+.RemoveAllLoggers()
+.AddHttpMessageHandler<GoogleCloudAuthenticationHandler>();
 
 var logProvider = new GoogleCloudLoggerProvider(logWriter);
 builder.Logging

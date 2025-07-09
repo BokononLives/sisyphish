@@ -14,8 +14,6 @@ public class CloudTasksService : GoogleCloudService, ICloudTasksService
 
     public async Task CreateHttpPostTask(string url, DiscordInteraction body)
     {
-        await Authenticate();
-
         var serializedBody = JsonSerializer.Serialize(body, SnakeCaseJsonContext.Default.DiscordInteraction);
         var encodedBody = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedBody));
 

@@ -7,7 +7,7 @@ namespace sisyphish.GoogleCloud.Logging;
 public class GoogleCloudLoggingBackgroundService
 {
     private const int MaxBatchSize = 50;
-    private static TimeSpan FlushInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(2);
 
     private readonly ChannelReader<Log> _logReader;
     private readonly IGoogleCloudLoggingService _logService;

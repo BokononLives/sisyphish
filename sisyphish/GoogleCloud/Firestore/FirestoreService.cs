@@ -12,8 +12,6 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
 
     public async Task<GoogleCloudFirestoreDocument?> GetDocumentById(string documentType, string documentId)
     {
-        await Authenticate();
-
         var firestoreDocument = await _httpClient.GetFromJsonAsync(
             requestUri: $"databases/(default)/documents/{documentType}/{documentId}",
             jsonTypeInfo: CamelCaseJsonContext.Default.GoogleCloudFirestoreDocument
@@ -24,8 +22,6 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
 
     public async Task<GoogleCloudFirestoreDocument?> GetDocumentByFields(string documentType, Dictionary<string, string?> fields)
     {
-        await Authenticate();
-
         var queryRequest = new GoogleCloudFirestoreQueryRequest
         {
             StructuredQuery = new GoogleCloudFirestoreStructuredQuery
@@ -74,8 +70,6 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
 
     public async Task<GoogleCloudFirestoreDocument?> GetDocumentByField(string documentType, string fieldName, string? fieldValue)
     {
-        await Authenticate();
-
         var queryRequest = new GoogleCloudFirestoreQueryRequest
         {
             StructuredQuery = new GoogleCloudFirestoreStructuredQuery
@@ -110,8 +104,6 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
 
     public async Task<GoogleCloudFirestoreDocument?> CreateDocument(CreateFirestoreDocumentRequest request)
     {
-        await Authenticate();
-
         var httpResponse = await _httpClient.PostAsJsonAsync(
             requestUri: $"databases/(default)/documents/{request.DocumentType}?documentId={request.DocumentId}",
             value: request,
@@ -127,8 +119,6 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
 
     public async Task<GoogleCloudFirestoreDocument?> UpdateDocument(UpdateFirestoreDocumentRequest request)
     {
-        await Authenticate();
-
         var queryString = new StringBuilder();
 
         if (request.CurrentDocument?.UpdateTime != null)
@@ -151,8 +141,6 @@ public class FirestoreService : GoogleCloudService, IFirestoreService
 
     public async Task DeleteDocument(DeleteFirestoreDocumentRequest request)
     {
-        await Authenticate();
-
         var httpResponse = await _httpClient.DeleteAsync(
             requestUri: $"databases/(default)/documents/{request.DocumentType}/{request.DocumentId}"
         );
