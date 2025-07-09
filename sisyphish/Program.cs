@@ -85,7 +85,7 @@ var logProvider = new GoogleCloudLoggerProvider(logWriter);
 builder.Logging
     .ClearProviders()
     .AddProvider(logProvider)
-        .AddFilter<GoogleCloudLoggerProvider>("", LogLevel.Warning)
+        .AddFilter<GoogleCloudLoggerProvider>("", LogLevel.Information)
     .AddJsonConsole()
         .AddFilter<ConsoleLoggerProvider>("", LogLevel.None)
         .AddFilter<ConsoleLoggerProvider>("Microsoft.Hosting.Lifetime", LogLevel.Warning)
