@@ -37,8 +37,6 @@ public class GoogleCloudLoggingService : GoogleCloudService, IGoogleCloudLogging
 
         try
         {
-            await Authenticate();
-
             var logRequest = new GoogleCloudLoggingLogRequest
             {
                 LogName = $"projects/{Config.GoogleProjectId}/logs/{Config.GoogleLoggingLogName}",
