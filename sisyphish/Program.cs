@@ -17,6 +17,7 @@ using sisyphish.Tools;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAuthorization();
+
 builder.Host.ConfigureHostOptions(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
 var setUpJsonSerializerOptions = (JsonSerializerOptions options) =>
