@@ -34,7 +34,9 @@ public static class IServiceCollectionExtensions
 
             .AddScoped<HelloWorldController>()
             .AddScoped<DiscordInteractionController>()
-            .AddScoped<SisyphishController>()
+            .AddScoped<FishController>()
+            .AddScoped<EventController>()
+            .AddScoped<ResetController>()
 
             .AddWithKeyedHttpClient<GoogleCloudFilter>(
                 baseAddress: Config.GoogleCertsBaseUrl)
