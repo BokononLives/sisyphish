@@ -15,12 +15,15 @@ public class Config
     public static string GoogleLoggingBaseUrl => "https://logging.googleapis.com/";
     public static string GoogleLoggingLogName => "sisyphish";
     public static string GoogleMetadataBaseUrl => "http://metadata/";
+    public static string GoogleMetadataFlavorKey => "Metadata-Flavor";
+    public static string GoogleMetadataFlavorValue => "Google";
     public static string GoogleProjectId => GetValue("GOOGLE_PROJECT_ID");
     public static string GoogleServiceAccount => GetValue("GOOGLE_SERVICE_ACCOUNT");
     public static string GoogleTasksBaseUrl => $"https://cloudtasks.googleapis.com/v2/projects/{GoogleProjectId}/locations/{GoogleLocation}/queues/{GoogleProjectId}/";
     public static bool IsDevelopment => GetValue("ASPNETCORE_ENVIRONMENT").Equals("DEVELOPMENT", StringComparison.InvariantCultureIgnoreCase);
     public static string Port => "8080";
     public static string PublicBaseUrl => "https://helloworld-33197368037.us-central1.run.app";
+    public static int ShutdownTimeoutInSeconds => 30;
     public static string Url => $"{BaseUrl}:{Port}";
 
     private static string GetValue(string key, string? defaultValue = null)

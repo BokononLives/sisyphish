@@ -7,7 +7,7 @@ using sisyphish.Tools;
 
 namespace sisyphish.Sisyphish.Processors;
 
-public class FishCommandProcessor : ICommandProcessor
+public class FishCommandProcessor : IFishCommandProcessor
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
@@ -24,7 +24,7 @@ public class FishCommandProcessor : ICommandProcessor
         _logger = logger;
     }
 
-    public DiscordCommandName? Command => DiscordCommandName.Fish;
+    public DiscordCommandName Command => DiscordCommandName.Fish;
 
     public async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction)
     {
@@ -33,10 +33,10 @@ public class FishCommandProcessor : ICommandProcessor
         {
             interaction.IsLucky = true;
         }
-        
+
         await _discord.DeferResponse(interaction, isEphemeral: interaction.IsLucky == true);
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/fish", interaction);
-        
+
         var response = new DeferredDiscordInteractionResponse();
         return response;
     }
@@ -62,7 +62,7 @@ public class FishCommandProcessor : ICommandProcessor
                     interaction.IsLucky == true
                         ? GetLucky(fisher)
                         : GoFish(fisher);
-                
+
                 if (expedition == null)
                 {
                     await ServeError(interaction, "An unexpected error occurred, please try again later!");
@@ -77,7 +77,7 @@ public class FishCommandProcessor : ICommandProcessor
                         default:
                             break;
                     }
-                    
+
                     if (expedition.CaughtFish == true)
                     {
                         await _fisherService.AddFish(fisher, expedition.FishType!.Value, (long)expedition.FishSize!);
@@ -94,13 +94,13 @@ public class FishCommandProcessor : ICommandProcessor
         {
             _logger.LogError(ex, "Unexpected error processing Fish command!");
         }
-        
+
         await _fisherService.UnlockFisher(fisher);
     }
 
     private async Task ServeError(DiscordInteraction interaction, string errorMessage)
     {
-        await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
+        await _discord.EditResponse(interaction, "Sisyphish is thinking...", []);
         await _discord.SendFollowupResponse(interaction, errorMessage, [], false);
         await _discord.DeleteResponse(interaction);
     }

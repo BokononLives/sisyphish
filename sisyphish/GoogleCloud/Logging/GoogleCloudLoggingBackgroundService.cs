@@ -56,7 +56,7 @@ public class GoogleCloudLoggingBackgroundService
             }
         }
     }
-    
+
     private async Task FlushBatch(List<Log> batch)
     {
         try
@@ -72,7 +72,7 @@ public class GoogleCloudLoggingBackgroundService
 
             foreach (var log in batch)
             {
-                Console.WriteLine(log.Text);   
+                Console.WriteLine(log.Text);
             }
         }
     }

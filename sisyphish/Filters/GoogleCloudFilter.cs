@@ -76,7 +76,7 @@ public class GoogleCloudFilter : IEndpointFilter
 
             return Results.Unauthorized();
         }
-        
+
         return await next(context);
     }
 

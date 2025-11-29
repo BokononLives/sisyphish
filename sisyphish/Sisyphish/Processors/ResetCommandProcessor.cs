@@ -7,7 +7,7 @@ using sisyphish.Tools;
 
 namespace sisyphish.Sisyphish.Processors;
 
-public class ResetCommandProcessor : ICommandProcessor
+public class ResetCommandProcessor : IResetCommandProcessor
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
@@ -20,13 +20,13 @@ public class ResetCommandProcessor : ICommandProcessor
         _promptService = promptService;
     }
 
-    public DiscordCommandName? Command => DiscordCommandName.Reset;
+    public DiscordCommandName Command => DiscordCommandName.Reset;
 
     public async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction)
-    {   
+    {
         await _discord.DeferResponse(interaction, isEphemeral: true);
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/reset", interaction);
-        
+
         var response = new DeferredDiscordInteractionResponse();
         return response;
     }

@@ -23,7 +23,7 @@ public class DiscordFilter : IEndpointFilter
         }
 
         context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
-        
+
         return await next(context);
     }
 

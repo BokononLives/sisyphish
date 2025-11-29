@@ -8,7 +8,7 @@ namespace sisyphish.GoogleCloud.CloudTasks;
 
 public class CloudTasksService : GoogleCloudService, ICloudTasksService
 {
-    public CloudTasksService(ILogger<CloudTasksService> logger, IGoogleCloudAuthenticationService authenticationService, HttpClient httpClient): base(logger, authenticationService, httpClient)
+    public CloudTasksService(ILogger<CloudTasksService> logger, IGoogleCloudAuthenticationService authenticationService, HttpClient httpClient) : base(logger, authenticationService, httpClient)
     {
     }
 

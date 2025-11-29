@@ -1,22 +1,30 @@
 using sisyphish.Discord.Models;
+using sisyphish.Extensions;
+using sisyphish.Filters;
 using sisyphish.Sisyphish.Processors;
+using sisyphish.Tools;
 
 namespace sisyphish.Controllers;
 
-public class HomeController
+public class DiscordInteractionController(IEnumerable<ICommandProcessor> commandProcessors) : IController<DiscordInteraction, IDiscordInteractionResponse>
 {
-    private readonly IEnumerable<ICommandProcessor> _commandProcessors;
+    public static string Path => "/";
 
-    public HomeController(IEnumerable<ICommandProcessor> commandProcessors)
-    {
-        _commandProcessors = commandProcessors;
-    }
-    public string Get()
-    {
-        return "Hello world!";
-    }
+    public static void MapRoute(WebApplication app)
+        => app.MapPost("/", async (HttpContext context, DiscordInteractionController controller) =>
+            {
+                var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
+                if (interaction == null)
+                {
+                    return Results.BadRequest("Invalid request");
+                }
 
-    public async Task<IDiscordInteractionResponse> Post(DiscordInteraction interaction)
+                var response = await controller.Execute(interaction);
+
+                return response.ToResult();
+            }).AddEndpointFilter<DiscordFilter>();
+
+    public async Task<IDiscordInteractionResponse> Execute(DiscordInteraction interaction)
     {
         var response = (interaction?.Type) switch
         {
@@ -26,7 +34,7 @@ public class HomeController
             null => new DiscordInteractionErrorResponse { Error = "Interaction type is required" },
             _ => new DiscordInteractionErrorResponse { Error = "Invalid interaction type" },
         };
-        
+
         return response;
     }
 
@@ -37,25 +45,25 @@ public class HomeController
 
     private async Task<IDiscordInteractionResponse> ProcessApplicationCommand(DiscordInteraction interaction)
     {
-        var commandProcessors = _commandProcessors
+        var matchingCommandProcessors = commandProcessors
             .Where(p => p.Command == interaction.Data?.Name)
             .ToList();
-        
-        var result = await ProcessInitialCommand(interaction, commandProcessors);
+
+        var result = await ProcessInitialCommand(interaction, matchingCommandProcessors);
         return result;
     }
 
     private async Task<IDiscordInteractionResponse> ProcessMessageComponent(DiscordInteraction interaction)
     {
-        var commandProcessors = _commandProcessors
+        var matchingCommandProcessors = commandProcessors
             .OfType<MessageComponentCommandProcessor>()
             .ToList<ICommandProcessor>();
-        
-        var result = await ProcessInitialCommand(interaction, commandProcessors);
+
+        var result = await ProcessInitialCommand(interaction, matchingCommandProcessors);
         return result;
     }
 
-    private async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction, List<ICommandProcessor> processors)
+    private static async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction, List<ICommandProcessor> processors)
     {
         if (processors.Count != 1)
         {

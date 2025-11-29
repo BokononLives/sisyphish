@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using sisyphish.Discord;
 using sisyphish.Discord.Models;
 using sisyphish.GoogleCloud.CloudTasks;
@@ -7,7 +8,7 @@ using sisyphish.Tools;
 
 namespace sisyphish.Sisyphish.Processors;
 
-public class MessageComponentCommandProcessor : ICommandProcessor
+public class MessageComponentCommandProcessor : IMessageComponentCommandProcessor
 {
     private readonly ICloudTasksService _cloudTasks;
     private readonly IDiscordService _discord;
@@ -24,7 +25,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
         _logger = logger;
     }
 
-    public DiscordCommandName? Command => null;
+    public DiscordCommandName Command => DiscordCommandName.Event;
 
     public async Task<IDiscordInteractionResponse> ProcessInitialCommand(DiscordInteraction interaction)
     {
@@ -40,7 +41,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
                 }
             };
         }
-        
+
         await _discord.DeferResponse(interaction, isEphemeral: false);
         await _discord.DeleteResponse(interaction, interaction.Message?.Id);
         await _cloudTasks.CreateHttpPostTask($"{Config.PublicBaseUrl}/sisyphish/event", interaction);
@@ -53,7 +54,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
     {
         var initFisherResult = await _fisherService.InitFisher(interaction);
         var fisher = initFisherResult?.Fisher;
-        
+
         var initPromptResult = await _promptService.InitPrompt(interaction);
         var prompt = initPromptResult?.Prompt;
 
@@ -87,12 +88,12 @@ public class MessageComponentCommandProcessor : ICommandProcessor
                         await _promptService.DeletePrompt(interaction);
 
                         break;
-                        
+
                     case Event.FoundTreasureChest:
                         var item = interaction.PromptResponse == "open"
                             ? (ItemType?)Random.Shared.GetItems(Enum.GetValues<ItemType>(), 1).Single()
                             : null;
-                        
+
                         if (item == null)
                         {
                             var content = $"You get nothing!";
@@ -106,9 +107,9 @@ public class MessageComponentCommandProcessor : ICommandProcessor
                             await _fisherService.AddItem(fisher, item.Value);
                             await _discord.EditResponse(interaction, content, []);
                         }
-                        
+
                         await _promptService.DeletePrompt(interaction);
-                        
+
                         break;
                     default:
                         break;
@@ -119,7 +120,7 @@ public class MessageComponentCommandProcessor : ICommandProcessor
         {
             _logger.LogError(ex, "Unexpected error processing Message Component!");
         }
-        
+
         await _fisherService.UnlockFisher(fisher);
     }
 }

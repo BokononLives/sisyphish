@@ -120,7 +120,7 @@ public class DiscordService : IDiscordService
                     - status code: {responseStatusCode}
                     - error: {responseErrorContent}
                     - request: {requestContent}".Replace(Environment.NewLine, " "));
-                    
+
                 Thread.Sleep(retryAfter);
             }
         }

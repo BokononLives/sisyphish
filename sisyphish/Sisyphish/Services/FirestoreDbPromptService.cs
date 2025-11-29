@@ -8,7 +8,7 @@ namespace sisyphish.Sisyphish.Services;
 public class FirestoreDbPromptService : IPromptService
 {
     private const string DocumentType = "prompts";
-    
+
     private readonly IFirestoreService _firestore;
     private readonly ILogger<FirestoreDbPromptService> _logger;
 

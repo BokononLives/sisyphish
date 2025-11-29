@@ -38,10 +38,13 @@ public static class DictionaryExtensions
     {
         if (fields != null && key != null && value != null)
         {
-            fields.Add(key, new GoogleCloudFirestoreValue { ArrayValue = new GoogleCloudFirestoreArrayValue
+            fields.Add(key, new GoogleCloudFirestoreValue
             {
-                Values = value.Select(v => mapping(v)).ToList()
-            } });
+                ArrayValue = new GoogleCloudFirestoreArrayValue
+                {
+                    Values = value.Select(v => mapping(v)).ToList()
+                }
+            });
         }
 
         return fields;

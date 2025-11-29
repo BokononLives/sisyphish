@@ -1,63 +1,32 @@
-using sisyphish.Discord;
 using sisyphish.Discord.Models;
+using sisyphish.Filters;
 using sisyphish.Sisyphish.Processors;
+using sisyphish.Tools;
 
 namespace sisyphish.Controllers;
 
-public class SisyphishController
+public abstract class SisyphishController(ICommandProcessor commandProcessor) : IController<DiscordInteraction, string>
 {
-    private readonly IDiscordService _discord;
-    private readonly IEnumerable<ICommandProcessor> _commandProcessors;
+    public static string Path => throw new NotImplementedException();
 
-    public SisyphishController(IDiscordService discord, IEnumerable<ICommandProcessor> commandProcessors)
+    public static void MapRoute(WebApplication app)
+        => app.MapPost(Path, async (HttpContext context, FishController controller) =>
+            {
+                var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
+                if (interaction == null)
+                {
+                    return Results.BadRequest("Invalid request");
+                }
+
+                var result = await controller.Execute(interaction);
+
+                return Results.Ok(result);
+            }).AddEndpointFilter<GoogleCloudFilter>();
+
+    public async Task<string> Execute(DiscordInteraction interaction)
     {
-        _discord = discord;
-        _commandProcessors = commandProcessors;
-    }
-
-    public async Task ProcessFishCommand(DiscordInteraction interaction)
-    {
-        var commandProcessors = _commandProcessors
-            .Where(p => p.Command == DiscordCommandName.Fish)
-            .ToList();
-        
-        await ProcessFollowUpToCommand(interaction, commandProcessors);
-    }
-
-    public async Task ProcessEvent(DiscordInteraction interaction)
-    {
-        var commandProcessors = _commandProcessors
-            .OfType<MessageComponentCommandProcessor>()
-            .ToList<ICommandProcessor>();
-        
-        await ProcessFollowUpToCommand(interaction, commandProcessors);
-    }
-
-    public async Task ProcessResetCommand(DiscordInteraction interaction)
-    {
-        var commandProcessors = _commandProcessors
-            .Where(p => p.Command == DiscordCommandName.Reset)
-            .ToList();
-        
-        await ProcessFollowUpToCommand(interaction, commandProcessors);
-    }
-
-    private async Task ProcessFollowUpToCommand(DiscordInteraction interaction, List<ICommandProcessor> processors)
-    {
-        if (processors.Count != 1)
-        {
-            await ServeError(interaction, "An unexpected error occurred, please try again later!");
-        }
-
-        var commandProcessor = processors.Single();
-
         await commandProcessor.ProcessFollowUpToCommand(interaction);
-    }
 
-    private async Task ServeError(DiscordInteraction interaction, string errorMessage)
-    {
-        await _discord.EditResponse(interaction, "I sure do love fishin'!", []);
-        await _discord.SendFollowupResponse(interaction, errorMessage, [], false);
-        await _discord.DeleteResponse(interaction);
+        return "OK";
     }
 }
