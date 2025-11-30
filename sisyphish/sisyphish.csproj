@@ -10,10 +10,12 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <PublishTrimmed>true</PublishTrimmed>
     <OptimizationPreference>Speed</OptimizationPreference>
+    <PrivateSdkAssemblies>$(TargetFramework)/$(RuntimeIdentifier)</PrivateSdkAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
+    <PackageReference Include="Microsoft.NETCore.App.Runtime.NativeAOT.linux-musl-x64" Version="10.0.0" />
     <PackageReference Include="NSec.Cryptography" Version="25.4.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
