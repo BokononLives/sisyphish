@@ -1,8 +1,11 @@
+using sisyphish.Discord.Models;
 using sisyphish.Sisyphish.Processors;
 
 namespace sisyphish.Controllers;
 
-public class FishController(IFishCommandProcessor commandProcessor) : SisyphishController(commandProcessor)
+public class FishController(IFishCommandProcessor commandProcessor) : SisyphishController(commandProcessor), IController<DiscordInteraction, string>
 {
-    public static new string Path => "sisyphish/fish";
+    public static string Path => "sisyphish/fish";
+
+    public static void MapRoute(WebApplication app) => MapRoute<FishController>(app);
 }

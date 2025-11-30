@@ -5,23 +5,23 @@ using sisyphish.Tools;
 
 namespace sisyphish.Controllers;
 
-public abstract class SisyphishController(ICommandProcessor commandProcessor) : IController<DiscordInteraction, string>
+public abstract class SisyphishController(ICommandProcessor commandProcessor)
 {
-    public static string Path => throw new NotImplementedException();
-
-    public static void MapRoute(WebApplication app)
-        => app.MapPost(Path, async (HttpContext context, FishController controller) =>
+    public static void MapRoute<TController>(WebApplication app) where TController : SisyphishController, IController<DiscordInteraction, string>
+        => app.MapPost(TController.Path, async (HttpContext context) =>
+        {
+            var controller = context.RequestServices.GetRequiredService<TController>();
+            
+            var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
+            if (interaction == null)
             {
-                var interaction = await context.Request.ReadFromJsonAsync(SnakeCaseJsonContext.Default.DiscordInteraction);
-                if (interaction == null)
-                {
-                    return Results.BadRequest("Invalid request");
-                }
+                return Results.BadRequest("Invalid request");
+            }
 
-                var result = await controller.Execute(interaction);
+            var result = await controller.Execute(interaction);
 
-                return Results.Ok(result);
-            }).AddEndpointFilter<GoogleCloudFilter>();
+            return Results.Ok(result);
+        }).AddEndpointFilter<GoogleCloudFilter>();
 
     public async Task<string> Execute(DiscordInteraction interaction)
     {
