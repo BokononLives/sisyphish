@@ -3,7 +3,7 @@ WORKDIR /app
 EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-RUN apt-get update && apt-get install -y clang musl-tools zlib1g-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y clang musl-tools zlib1g-dev && dotnet workload install nativeaot && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY ["sisyphish/sisyphish.csproj", "sisyphish/"]
 RUN dotnet restore "sisyphish/sisyphish.csproj"
