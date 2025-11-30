@@ -4,7 +4,7 @@ using sisyphish.Tools;
 
 namespace sisyphish.Filters;
 
-public class GoogleCloudFilter : IEndpointFilter
+public class GoogleCloudFilter : IEndpointFilter, IKeyedService
 {
     private readonly ILogger<GoogleCloudFilter> _logger;
     private readonly HttpClient _httpClient;
@@ -12,8 +12,11 @@ public class GoogleCloudFilter : IEndpointFilter
     public GoogleCloudFilter(ILogger<GoogleCloudFilter> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
-        _httpClient = httpClientFactory.CreateClient(nameof(GoogleCloudFilter));
+        _httpClient = httpClientFactory.CreateClient(KeyName)
+            ?? throw new InvalidOperationException($"No HttpClient registered for key {KeyName}");
     }
+
+    public static string KeyName => "GoogleCloudFilter";
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

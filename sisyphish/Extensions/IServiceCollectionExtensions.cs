@@ -101,6 +101,7 @@ public static class IServiceCollectionExtensions
         string baseAddress,
         bool enableHttpLogging = true,
         params KeyValuePair<string, string>[] headers)
+            where TImplementation : IKeyedService
     {
         var httpClientBuilder = services
             .AddWithKeyedHttpClientInternal<TImplementation>(baseAddress, headers);
@@ -118,6 +119,7 @@ public static class IServiceCollectionExtensions
         string baseAddress,
         bool enableHttpLogging = true,
         params KeyValuePair<string, string>[] headers)
+            where TImplementation : IKeyedService
             where THandler : DelegatingHandler
     {
         var httpClientBuilder = services
@@ -144,7 +146,8 @@ public static class IServiceCollectionExtensions
         this IServiceCollection services,
         string baseAddress,
         params KeyValuePair<string, string>[] headers)
-            => services.AddHttpClient(nameof(T), client => ConfigureHttpClient(client, baseAddress, headers));
+            where T : IKeyedService
+            => services.AddHttpClient(T.KeyName, client => ConfigureHttpClient(client, baseAddress, headers));
 
     private static void ConfigureHttpClient(HttpClient client, string baseAddress, IEnumerable<KeyValuePair<string, string>> headers)
     {
