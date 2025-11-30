@@ -20,7 +20,7 @@ public abstract class SisyphishController(ICommandProcessor commandProcessor)
 
             var result = await controller.Execute(interaction);
 
-            return Results.Ok(result);
+            return Results.Ok();
         }).AddEndpointFilter<GoogleCloudFilter>();
 
     public async Task<string> Execute(DiscordInteraction interaction)

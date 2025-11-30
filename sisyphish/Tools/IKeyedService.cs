@@ -1,4 +1,4 @@
-namespace sisyphish.Filters;
+namespace sisyphish.Tools;
 
 public interface IKeyedService
 {
