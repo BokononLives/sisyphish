@@ -10,7 +10,6 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <PublishTrimmed>true</PublishTrimmed>
     <OptimizationPreference>Speed</OptimizationPreference>
-    <PrivateSdkAssemblies>$(TargetFramework)/$(RuntimeIdentifier)</PrivateSdkAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
