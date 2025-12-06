@@ -10,7 +10,7 @@ RUN dotnet restore "sisyphish/sisyphish.csproj"
 COPY . .
 
 WORKDIR /src/sisyphish
-RUN dotnet publish "sisyphish.csproj" -c Release -r linux-musl-x64 -o /app/publish --no-restore
+RUN dotnet publish "sisyphish.csproj" -c Release -r linux-musl-x64 -p:PublishAot=true --self-contained true -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
